@@ -8,8 +8,7 @@ use Mix.Config
 # Configures the endpoint
 config :excess, Excess.Endpoint,
   url: [host: "localhost"],
-  http: [port: System.get_env("PORT")],
-  secret_key_base: "xjXJZlZA+54Gkjw/JmRwfu3xwHApmJx0vEZaS6LgqdT/kUZKB5MJtr01Ou67htEI",
+  secret_key_base: "mQHZBtiI+npWSuDaTsq2UR8yFC4EqvOBM4z1KwQFxkmdEHxWUGHDEGIWu6l31Fnk",
   debug_errors: false
 
 # Configures Elixir's Logger

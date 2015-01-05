@@ -21,8 +21,8 @@ defmodule Excess.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_excess_key",
-    signing_salt: "e878ix56",
-    encryption_salt: "OlLK3aPE"
+    signing_salt: "TchvC2TP",
+    encryption_salt: "35H4RmJb"
 
   plug :router, Excess.Router
 end
