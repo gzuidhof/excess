@@ -22,7 +22,7 @@ defmodule Excess.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [{:phoenix, github: "phoenixframework/phoenix"},
+    [{:phoenix, github: "phoenixframework/phoenix", ref: "cm-channels-next"},
      {:cowboy, "~> 1.0"}]
   end
 end
