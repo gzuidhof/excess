@@ -27,7 +27,7 @@ defmodule Excess.RoomTest do
 
   end
 
-  test "destroys when empty", %{room: room} do
+  test "stops when empty", %{room: room} do
     assert Excess.Room.get(room, "fred") == nil
     Excess.Room.put(room, "fred", 1234)
     Excess.Room.delete(room, "fred")

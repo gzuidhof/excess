@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <script src="phoenix.js"></script>
+</head>
+<body>
+
+
+<script>
+  var socket = new Phoenix.Socket("//localhost:4000/excess");
+
+  socket.join("room:asdf", {"user_id": "testUser"}, function(channel) {
+
+    channel.on("pong", function(message) {
+      console.log("Got " + message + " while listening for event pong");
+    });
+
+    onSomeEvent =(function() {
+      channel.send("ping", {data: "json stuff"});
+    });
+
+  });
+
+
+</script>
+
+
+</body>
+</html>

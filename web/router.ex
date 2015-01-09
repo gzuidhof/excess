@@ -14,7 +14,7 @@ defmodule Excess.Router do
 
   socket "/excess", Excess do
     # channel "signup:*", Excess.SignalChannel
-    channel "room:*", Excess.SignalChannel
+    channel "room:*", SignalChannel
   end
 
 
