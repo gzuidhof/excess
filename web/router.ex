@@ -18,11 +18,11 @@ defmodule Excess.Router do
   end
 
 
-  scope "/", Excess do
-    pipe_through :browser # Use the default browser stack
-
-    get "/", PageController, :index
-  end
+#  scope "/", Excess do
+#    pipe_through :browser # Use the default browser stack
+#
+#    get "/", PageController, :index
+#  end
 
   # Other scopes may use custom stacks.
   # scope "/api", Excess do

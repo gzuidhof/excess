@@ -39,8 +39,8 @@ defmodule Excess.Registry do
   ## Server Callbacks
 
   def init({rooms}) do
-    names = HashDict.new
-    refs = HashDict.new
+    names = HashDict.new #Maps name of rooms to (Room) agent
+    refs = HashDict.new #Maps PIDs to name of room
 
     {:ok, %{names: names, refs: refs, rooms: rooms}}
   end
