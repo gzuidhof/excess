@@ -8,6 +8,7 @@ defmodule Excess do
 
     children = [
       # Start the endpoint when the application starts
+      supervisor(Excess.Supervisor, []),
       worker(Excess.Endpoint, []),
 
       # Here you could define other workers and supervisors as children

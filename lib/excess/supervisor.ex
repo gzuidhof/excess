@@ -10,6 +10,7 @@ defmodule Excess.Supervisor do
   @room_sup_name Excess.Bucket.Supervisor
 
   def init(:ok) do
+    IO.puts "Started Excess.Supervisor (room data server)"
     children = [
     #  worker(GenEvent, [[name: @manager_name]]),
       supervisor(Excess.Room.Supervisor, [[name: @room_sup_name]]),
