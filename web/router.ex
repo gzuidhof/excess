@@ -12,6 +12,12 @@ defmodule Excess.Router do
     plug :accepts, ~w(json)
   end
 
+  socket "/excess", Excess do
+    # channel "signup:*", Excess.SignalChannel
+    channel "room:*", Excess.SignalChannel
+  end
+
+
   scope "/", Excess do
     pipe_through :browser # Use the default browser stack
 
