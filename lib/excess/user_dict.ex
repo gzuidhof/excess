@@ -35,13 +35,12 @@ defmodule Excess.UserDict do
     {:reply, :ok, HashDict.delete(dict, user)}
   end
 
-  def handle_cast({:put, user, room},  dict) do
-    {:noreply, HashDict.put(dict, user, room)}
-  end
-
-
   def handle_call(request, from, state) do
     super(request, from, state)
+  end
+
+  def handle_cast({:put, user, room},  dict) do
+    {:noreply, HashDict.put(dict, user, room)}
   end
 
   def handle_cast(request, state) do

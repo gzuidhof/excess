@@ -64,7 +64,11 @@ defmodule Excess.Registry do
 
   end
 
-  def handle_info({:DOWN, ref, :process, pid, _reason}, state) do
+  def handle_call(:stop, _from, state) do
+    {:stop, :normal, :ok, state}
+  end
+
+  def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
     {name, refs} = HashDict.pop(state.refs, ref)
     names = HashDict.delete(state.names, name)
     {:noreply, %{state | names: names, refs: refs}}
@@ -72,8 +76,6 @@ defmodule Excess.Registry do
 
 
 
-  def handle_call(:stop, _from, state) do
-  {:stop, :normal, :ok, state}
-  end
+
 
 end
