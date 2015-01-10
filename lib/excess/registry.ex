@@ -23,7 +23,7 @@ defmodule Excess.Registry do
   Ensures there is a room associated to the given `name` in `server`.
   """
   def create(server, name) do
-    GenServer.cast(server, {:create, name})
+    GenServer.call(server, {:create, name})
   end
 
   @doc """
@@ -49,17 +49,17 @@ defmodule Excess.Registry do
     {:reply, HashDict.fetch(state.names, name), state}
   end
 
-  def handle_cast({:create, name}, state) do
+  def handle_call({:create, name}, _from, state) do
 
-      if HashDict.get(state.names, name) do
-        {:noreply, state}
+      if room = HashDict.get(state.names, name) do
+        {:reply, room ,state}
       else
         {:ok, pid} = Excess.Room.Supervisor.start_room(state.rooms)
         ref = Process.monitor(pid)
         refs = HashDict.put(state.refs, ref, name)
         names = HashDict.put(state.names, name, pid)
 
-        {:noreply, %{state | names: names, refs: refs}}
+        {:reply, pid, %{state | names: names, refs: refs}}
       end
 
   end

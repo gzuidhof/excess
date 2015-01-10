@@ -15,6 +15,14 @@ defmodule Excess.RoomTest do
     assert Excess.Room.get(room, "fred") == 1234
   end
 
+  test "stops room when empty", %{room: room} do
+    assert Excess.Room.get(room, "fred") == nil
+    Excess.Room.put(room, "fred", 1234)
+    Excess.Room.delete(room, "fred")
+
+    assert Process.alive?(room) == false
+  end
+
 
   test "removes users by id", %{room: room} do
     assert Excess.Room.get(room, "fred") == nil
@@ -27,13 +35,7 @@ defmodule Excess.RoomTest do
 
   end
 
-  test "stops when empty", %{room: room} do
-    assert Excess.Room.get(room, "fred") == nil
-    Excess.Room.put(room, "fred", 1234)
-    Excess.Room.delete(room, "fred")
 
-    assert Process.alive?(room) == false
-  end
 
 
 end

@@ -24,7 +24,7 @@ defmodule Excess.RegistryTest do
 
     # Kill the bucket and wait for the notification
     Process.exit(room, :shutdown)
-    :timer.sleep(20)
+    :timer.sleep(30)
     assert Excess.Registry.lookup(registry, "room") == :error
   end
 
@@ -34,7 +34,7 @@ defmodule Excess.RegistryTest do
 
     Excess.Room.put(room, "hank", 1234)
     Excess.Room.delete(room, "hank")
-    :timer.sleep(20)
+    :timer.sleep(30)
     assert Excess.Registry.lookup(registry, "room") == :error
   end
 

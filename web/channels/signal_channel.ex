@@ -7,7 +7,10 @@ defmodule Excess.SignalChannel do
 
     Logger.info "User #{user_id} joined room #{room_id}"
 
-    #a = Excess.Registry.lookup(Excess.Registry, "room")
+    # Create room (will only create it if it already exists)
+    room = Excess.Registry.create(Excess.Registry, "room")
+    Excess.Room.put(room, user_id)
+
     {:ok, socket}
   end
 
