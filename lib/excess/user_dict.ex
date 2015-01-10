@@ -3,8 +3,8 @@ defmodule Excess.UserDict do
 
   # Client
 
-  def start_link do
-    GenServer.start_link(__MODULE__, :ok)
+  def start_link (opts \\ []) do
+    GenServer.start_link(__MODULE__, :ok, opts)
   end
 
   def get(pid, user) do

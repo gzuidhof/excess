@@ -26,13 +26,13 @@ defmodule Excess.Room do
   Returns the current value of `user`, if `user` exists.
   """
   def delete(room, key) do
-    value = Agent.get_and_update(room, &HashDict.pop(&1, key))
+    val = Agent.get_and_update(room, &HashDict.pop(&1, key))
 
     if (Agent.get(room, &HashDict.size(&1)) < 1) do
       Agent.stop(room)
     end
 
-    value
+    val
   end
 
 

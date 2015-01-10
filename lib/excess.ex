@@ -1,15 +1,19 @@
 defmodule Excess do
   use Application
 
+  @user_dict_name Excess.UserDict
+
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+
+
     children = [
       # Start the endpoint when the application starts
       supervisor(Excess.Supervisor, []),
-      worker(Excess.UserDict, []),
+      worker(Excess.UserDict, [[name: @user_dict_name]]),
       worker(Excess.Endpoint, []),
 
       # Here you could define other workers and supervisors as children
@@ -18,7 +22,7 @@ defmodule Excess do
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Excess.Supervisor]
+    opts = [strategy: :one_for_all, name: Excess.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
