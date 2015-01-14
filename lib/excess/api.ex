@@ -52,7 +52,7 @@ defmodule Excess.Api do
   def get_user(user_id, room_id) do
     case Excess.Registry.lookup(Excess.Registry, room_id) do
       {:ok, room} ->
-        Excess.Room.get(user_id, room_id)
+        Excess.Room.get(room, user_id)
       :error ->
         :error
     end
