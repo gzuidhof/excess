@@ -5,17 +5,17 @@ defmodule Excess.Supervisor do
     Supervisor.start_link(__MODULE__, :ok)
   end
 
-  @registry_name Excess.Registry
-  @room_sup_name Excess.Bucket.Supervisor
+  @registry_sup_name Excess.Bucket.Supervisor
+  @user_dict_name Excess.UserDict
 
   def init(:ok) do
-    IO.puts "Started Excess.Supervisor (room data server)"
+    IO.puts "> Started Excess.Supervisor"
     children = [
-      supervisor(Excess.Room.Supervisor, [[name: @room_sup_name]]),
-      worker(Excess.Registry, [@room_sup_name, [name: @registry_name]])
+      worker(Excess.UserDict, [[name: @user_dict_name]]),
+      supervisor(Excess.RegistrySupervisor, [[name: @registry_sup_name]])
     ]
 
-    supervise(children, strategy: :one_for_one)
+    supervise(children, strategy: :one_for_all)
   end
 
 end
