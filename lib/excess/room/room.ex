@@ -35,5 +35,11 @@ defmodule Excess.Room do
     val
   end
 
+  def keys(room) do
+    Agent.get(room, &HashDict.keys(&1))
+  end
+
+
+
 
 end

@@ -1,4 +1,4 @@
-defmodule Api do
+defmodule Excess.Api do
   require Logger
 
 
@@ -40,6 +40,14 @@ defmodule Api do
     {:ok, previous_room_id}
   end
 
+  def get_users(room_id) do
+    case Excess.Registry.lookup(Excess.Registry, room_id) do
+      {:ok, room} ->
+        room.keys
+      :error ->
+        []
 
+    end
+  end
 
 end
