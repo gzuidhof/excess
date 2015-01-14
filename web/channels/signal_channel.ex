@@ -17,23 +17,6 @@ defmodule Excess.SignalChannel do
     {:error, socket, :did_not_specify_user_id}
   end
 
-  # Room switching
-
-  def handle_in("switch:room", %{"room_id" => room_id}, socket) do
-    user_id = socket.assigns[:user_id]
-
-    {:ok, previous_room_id} = Excess.Api.switch_room(user_id. room_id, socket)
-    Logger.info "SWITCH #{user_id} switched from room " <>
-      "#{previous_room_id} to room #{room_id}"
-
-    reply socket, "switch:room", %{message: ("You joined room " <> room_id)}
-  end
-
-  def handle_in("switch:room", message, socket) do
-    Logger.warn "Invalid switch:room message received: #{(inspect message)}"
-    reply socket, "switch:room:error", %{message: "Invalid message!"}
-  end
-
   # Room lookup
 
   def handle_in("get:room", %{"room_id" => room_id}, socket) do
