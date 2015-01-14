@@ -6,14 +6,8 @@ defmodule Excess.SignalChannel do
 
   def join("room:" <> room_id, %{"user_id" => user_id}, socket) do
     socket = assign(socket, :user_id, user_id)
-
+    Excess.Api.join_room(user_id, room_id, socket)
     Logger.info "JOIN #{user_id} joined in room #{room_id}"
-
-    # Create room (will only create it if it already exists)
-    room = Excess.Registry.create(Excess.Registry, room_id)
-    Excess.Room.put(room, user_id, socket)
-    Excess.UserDict.put(Excess.UserDict, user_id, room_id)
-
     {:ok, socket}
   end
 
@@ -25,16 +19,10 @@ defmodule Excess.SignalChannel do
 
   def handle_in("switch:room", %{"room_id" => room_id}, socket) do
     user_id = socket.assigns[:user_id]
-    current_room_id = Excess.UserDict.get(Excess.UserDict, user_id)
 
-    {:ok, current_room} = Excess.Registry.lookup(Excess.Registry, current_room_id)
-    toRoom = Excess.Registry.create(Excess.Registry, room_id)
-
-    Excess.Room.delete(current_room, user_id)
-    Excess.Room.put(toRoom, user_id, socket)
-    Excess.UserDict.put(Excess.UserDict, user_id, room_id)
-
-    Logger.info "SWITCH #{user_id} switched from room #{current_room_id} to room #{room_id}"
+    {:ok, previous_room_id} = Excess.Api.switch_room(user_id. room_id, socket)
+    Logger.info "SWITCH #{user_id} switched from room " <>
+      "#{previous_room_id} to room #{room_id}"
 
     reply socket, "switch:room", %{message: ("You joined room " <> room_id)}
   end
@@ -52,19 +40,8 @@ defmodule Excess.SignalChannel do
 
   def leave(_message, socket) do
     user_id = socket.assigns[:user_id]
-    current_room_id = Excess.UserDict.get(Excess.UserDict, user_id)
-
-    case Excess.Registry.lookup(Excess.Registry, current_room_id) do
-      {:ok, current_room} ->
-        Logger.info "LEAVE #{user_id}, in room #{current_room_id} left server"
-        Excess.Room.delete(current_room, user_id)
-      :error ->
-        Logger.warn "LEAVE User didn't seem to be in room #{current_room_id}?!"
-    end
-
-
-    Excess.UserDict.delete(Excess.UserDict, user_id)
-
+    {:ok, room_id} = Excess.Api.leave(user_id)
+    Logger.info "LEAVE #{user_id} left server, was in room #{room_id}"
     {:ok, socket}
   end
 
