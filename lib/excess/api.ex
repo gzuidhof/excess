@@ -43,10 +43,9 @@ defmodule Excess.Api do
   def get_users(room_id) do
     case Excess.Registry.lookup(Excess.Registry, room_id) do
       {:ok, room} ->
-        room.keys
+        Excess.Room.keys(room)
       :error ->
         []
-
     end
   end
 

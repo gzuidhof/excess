@@ -19,6 +19,8 @@ defmodule Excess.RoomTest do
     assert Excess.Room.get(room, "fred") == nil
     Excess.Room.put(room, "fred", 1234)
     Excess.Room.delete(room, "fred")
+
+    #Stopping may take a short while, done async
     :timer.sleep 50
 
     assert Process.alive?(room) == false
