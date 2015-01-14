@@ -1,3 +1,4 @@
+#  Maps user_id's to something, generally user_id -> socket
 defmodule Excess.UserDict do
   use GenServer
 

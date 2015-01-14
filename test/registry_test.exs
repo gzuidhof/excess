@@ -13,8 +13,8 @@ defmodule Excess.RegistryTest do
     Excess.Registry.create(registry, "someRoom")
     assert {:ok, room} = Excess.Registry.lookup(registry, "someRoom")
 
-    Excess.Room.put(room, "someOtherRoom", 1)
-  #  assert Excess.Room.get(room, "someOtherRoom") == 1
+    Excess.Room.put(room, "someUser", 1)
+    assert Excess.Room.get(room, "someUser") == 1
   end
 
 
