@@ -30,6 +30,29 @@ defmodule Excess.SignalChannel do
     reply socket, "get:room:error", %{message: "Invalid message!"}
   end
 
+
+  def handle_in("msg:user", %{"to"=> to_id, "msg"=> msg, "room"=> room}, socket) do
+
+    from = socket.assigns[:user_id]
+
+    case Excess.Api.get_user(to_id, room) do
+      toSocket ->
+          reply toSocket, "msg:user", %{from: from, msg: msg}
+          reply socket, "msg:user", %{ok: true}
+      :error ->
+        Logger.warn "To user not found #{(inspect to_id)}"
+        reply socket, "msg:user:notfound", %{message: "To user not found!"}
+    end
+
+  end
+
+  def handle_in("msg:user", message, socket) do
+    Logger.warn "Invalid msg:user message received: #{(inspect message)}"
+    reply socket, "msg:user:error",
+      %{message: "Invalid message, need \"to\", \"msg\" and \"room\" fields!"}
+  end
+
+
   # Invalid topic
 
   def handle_in(topic, message, socket) do

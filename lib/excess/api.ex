@@ -49,4 +49,13 @@ defmodule Excess.Api do
     end
   end
 
+  def get_user(user_id, room_id) do
+    case Excess.Registry.lookup(Excess.Registry, room_id) do
+      {:ok, room} ->
+        Excess.Room.get(user_id, room_id)
+      :error ->
+        :error
+    end
+  end
+
 end
