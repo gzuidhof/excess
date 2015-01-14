@@ -13,8 +13,8 @@
 
   socket.join("room:asdf", {"user_id": "testUser"}, function(channel) {
 
-    channel.on("pong", function(message) {
-      console.log("Got " + message + " while listening for event pong");
+    channel.on("get:room", function(message) {
+      console.log("Got ", message, " while listening for event get:room!");
     });
 
     onSomeEvent =(function() {
