@@ -8,7 +8,7 @@ defmodule Excess.DiscoveryChannel do
 
   # Room lookup
 
-  def handle_in("get:room", %{"room_id" => room_id}, socket) do
+  def handle_in("get:room", %{"id" => room_id}, socket) do
     users = Excess.Api.get_users(room_id)
     Logger.info "LOOKUP user list of #{room_id}"
     reply socket, "get:room", %{users: users}
