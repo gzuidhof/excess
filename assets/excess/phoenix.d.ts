@@ -52,8 +52,8 @@
         * Type: WebSocket or LongPoller, need union types to specify this (TS 1.4).
         */
         transport?: any;
-        heartbeatIntervalMs: number;
-        logger: any;
+        heartbeatIntervalMs?: number;
+        logger?: any;
        
     }
 
