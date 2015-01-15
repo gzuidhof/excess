@@ -17,20 +17,6 @@ defmodule Excess.SignalChannel do
     {:error, socket, :did_not_specify_user_id}
   end
 
-  # Room lookup
-
-  def handle_in("get:room", %{"room_id" => room_id}, socket) do
-    users = Excess.Api.get_users(room_id)
-    Logger.info "LOOKUP user list of #{room_id}"
-    reply socket, "get:room", %{users: users}
-  end
-
-  def handle_in("get:room", message, socket) do
-    Logger.warn "Invalid get:room message received: #{(inspect message)}"
-    reply socket, "get:room:error", %{message: "Invalid message!"}
-  end
-
-
   def handle_in("msg:user", %{"to"=> to_id, "msg"=> msg, "room"=> room}, socket) do
 
     from = socket.assigns[:user_id]

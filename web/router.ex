@@ -15,10 +15,11 @@ defmodule Excess.Router do
   socket "/excess", Excess do
     # channel "signup:*", Excess.SignalChannel
     channel "room:*", SignalChannel
+    channel "discovery", DiscoveryChannel
   end
 
 
-  
+
 
 #  scope "/", Excess do
 #    pipe_through :browser # Use the default browser stack
