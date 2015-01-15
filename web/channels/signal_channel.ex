@@ -17,13 +17,13 @@ defmodule Excess.SignalChannel do
     {:error, socket, :did_not_specify_user_id}
   end
 
-  def handle_in("msg:user", %{"to"=> to_id, "msg"=> msg, "room"=> room}, socket) do
+  def handle_in("msg:user", %{"to"=> to_id, "data"=> data, "room"=> room}, socket) do
 
     from = socket.assigns[:user_id]
 
     case Excess.Api.get_user(to_id, room) do
       toSocket ->
-          reply toSocket, "msg:user", %{from: from, msg: msg}
+          reply toSocket, "msg:user", %{from: from, data: data}
           reply socket, "msg:user", %{ok: true}
       :error ->
         Logger.warn "To user not found #{(inspect to_id)}"
