@@ -7,7 +7,7 @@ defmodule Excess.SignalChannel do
   def join("room:" <> room_id, %{"user_id" => user_id}, socket) do
     socket = assign(socket, :user_id, user_id)
     Excess.Api.join_room(user_id, room_id, socket)
-    Logger.info "JOIN #{user_id} joined in room #{room_id}"
+    Logger.info "JOIN #{user_id} joined room #{room_id}"
     {:ok, socket}
   end
 
@@ -51,7 +51,7 @@ defmodule Excess.SignalChannel do
   def leave(_message, socket) do
     user_id = socket.assigns[:user_id]
     {:ok, room_id} = Excess.Api.leave(user_id)
-    Logger.info "LEAVE #{user_id} left server, was in room #{room_id}"
+    Logger.info "LEAVE #{user_id} left room #{room_id}"
     {:ok, socket}
   end
 
