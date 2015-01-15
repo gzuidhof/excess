@@ -10,7 +10,7 @@ defmodule Excess.DiscoveryChannel do
 
   def handle_in("get:room", %{"id" => room_id, "r" => request}, socket) do
     users = Excess.Api.get_users(room_id)
-    Logger.info "LOOKUP user list of #{room_id}"
+    Logger.info "LOOKUP peers of \t #{room_id}"
     reply socket, "get:room", %{users: users, r: request}
   end
 
