@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="phoenix.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">

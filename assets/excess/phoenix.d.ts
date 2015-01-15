@@ -1,6 +1,10 @@
 ﻿declare module Phoenix {
 
-    export interface Channel {
+    export class Channel {
+
+        topic: string;
+        message: string;
+        socket: Phoenix.Socket;
 
         constructor(topic: string, message: string, callback, socket: any);
         reset(): any;
@@ -13,9 +17,10 @@
         send(event: string, payload: any): any;
 
         leave(message: any);
+
     }
 
-    export interface Socket {
+    export class Socket {
         constructor(path: string, opts?: SocketOptions);
 
         protocol: () => string;
@@ -57,7 +62,7 @@
        
     }
 
-    export interface LongPoller {
+    export class LongPoller {
         constructor(endPoint: string);
         open(): any;
         normalizeEndpoint(endPoint: string): string;
