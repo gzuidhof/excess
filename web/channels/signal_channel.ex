@@ -19,9 +19,10 @@ defmodule Excess.SignalChannel do
 
   # Message passing
 
-  def handle_in("msg:user", %{"to"=> to_id, "data"=> data, "room"=> room}, socket) do
+  def handle_in("msg:user", %{"to"=> to_id, "data"=> data}, socket) do
 
     from = socket.assigns[:user_id]
+    room = Excess.UserDict.get(Excess.UserDict, to_id)
 
     case Excess.Api.get_user(to_id, room) do
       :error ->
@@ -29,7 +30,7 @@ defmodule Excess.SignalChannel do
         reply socket, "msg:user", %{error: "USERNOTFOUND", message: "To user not found!"}
       toSocket ->
           reply toSocket, "msg:user", %{from: from, data: data}
-          reply socket, "msg:user", %{ok: true}
+          {:ok, socket} # no reply to sender
 
     end
 
