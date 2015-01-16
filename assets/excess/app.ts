@@ -75,11 +75,14 @@ module excess {
 
         private addDiscoveryChannel(channel: Phoenix.Channel) {
             this.discoveryChannel = channel;
-            channel.on("get:room", (message) => {
-                this.discoveryCallbacks[message.r](message.users);
-                delete this.discoveryCallbacks[message.r];
-            });
+            channel.on("get:room", this.receiveDiscovery);
         }
+
+        private receiveDiscovery = (message) => {
+            this.discoveryCallbacks[message.r](message.users);
+            delete this.discoveryCallbacks[message.r];
+        }
+
 
         private discover(room: string, callback: (peers: string[]) => void) {
             var uid = new Date().getTime();
@@ -90,9 +93,10 @@ module excess {
         /**
         * Send message to peer, via signalling server
         */
-        public signal(toId: string, payload: any, roomId: string = this.currentRoom) {
+        public signal(toId: string, payload: any, roomId: string) {
+            if (!roomId) roomId = this.currentRoom.split(':')[1];
             var from = this.id;
-            this.signalChannel.send("msg:user", { to: toId, room: roomId, data: payload });
+            this.signalChannel.send("msg:user", { to: toId, data: payload });
         }
         
 

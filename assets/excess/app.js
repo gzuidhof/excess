@@ -30,6 +30,10 @@ var excess;
                     console.log("Received message: ", message);
                 });
             };
+            this.receiveDiscovery = function (message) {
+                _this.discoveryCallbacks[message.r](message.users);
+                delete _this.discoveryCallbacks[message.r];
+            };
             this.id = id;
             this.discoveryCallbacks = {};
             this.socket = new Phoenix.Socket(endPoint);
@@ -48,12 +52,8 @@ var excess;
             }
         };
         Signaller.prototype.addDiscoveryChannel = function (channel) {
-            var _this = this;
             this.discoveryChannel = channel;
-            channel.on("get:room", function (message) {
-                _this.discoveryCallbacks[message.r](message.users);
-                delete _this.discoveryCallbacks[message.r];
-            });
+            channel.on("get:room", this.receiveDiscovery);
         };
         Signaller.prototype.discover = function (room, callback) {
             var uid = new Date().getTime();
@@ -64,9 +64,10 @@ var excess;
         * Send message to peer, via signalling server
         */
         Signaller.prototype.signal = function (toId, payload, roomId) {
-            if (roomId === void 0) { roomId = this.currentRoom; }
+            if (!roomId)
+                roomId = this.currentRoom.split(':')[1];
             var from = this.id;
-            this.signalChannel.send("msg:user", { to: toId, room: roomId, data: payload });
+            this.signalChannel.send("msg:user", { to: toId, data: payload });
         };
         return Signaller;
     })();
