@@ -58,7 +58,7 @@ module excess {
                 if (this.currentRoom) { // Leave current room if any
                     this.socket.leave(this.currentRoom, {}); 
                 }
-
+                //Join new room
                 this.socket.join(("room:"+room), { user_id: this.id }, (channel) => this.addChannel(room, channel));
             }
         }
@@ -66,6 +66,11 @@ module excess {
         private addChannel = (room: string, channel: Phoenix.Channel) => {
             this.signalChannel = channel;
             this.currentRoom = channel.topic;
+            
+
+            channel.on("msg:user", (message) => {
+                console.log("Received message: ", message);
+            });
         }
 
         private addDiscoveryChannel(channel: Phoenix.Channel) {
@@ -81,6 +86,16 @@ module excess {
             this.discoveryCallbacks[uid] = callback;
             this.discoveryChannel.send("get:room", {id: room, r: uid });
         }
+
+        /**
+        * Send message to peer, via signalling server
+        */
+        public signal(toId: string, payload: any, roomId: string = this.currentRoom) {
+            var from = this.id;
+            this.signalChannel.send("msg:user", { to: toId, room: roomId, data: payload });
+        }
+        
+
     }
 
 

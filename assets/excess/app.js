@@ -26,6 +26,9 @@ var excess;
             this.addChannel = function (room, channel) {
                 _this.signalChannel = channel;
                 _this.currentRoom = channel.topic;
+                channel.on("msg:user", function (message) {
+                    console.log("Received message: ", message);
+                });
             };
             this.id = id;
             this.discoveryCallbacks = {};
@@ -40,6 +43,7 @@ var excess;
                 if (this.currentRoom) {
                     this.socket.leave(this.currentRoom, {});
                 }
+                //Join new room
                 this.socket.join(("room:" + room), { user_id: this.id }, function (channel) { return _this.addChannel(room, channel); });
             }
         };
@@ -55,6 +59,14 @@ var excess;
             var uid = new Date().getTime();
             this.discoveryCallbacks[uid] = callback;
             this.discoveryChannel.send("get:room", { id: room, r: uid });
+        };
+        /**
+        * Send message to peer, via signalling server
+        */
+        Signaller.prototype.signal = function (toId, payload, roomId) {
+            if (roomId === void 0) { roomId = this.currentRoom; }
+            var from = this.id;
+            this.signalChannel.send("msg:user", { to: toId, room: roomId, data: payload });
         };
         return Signaller;
     })();
