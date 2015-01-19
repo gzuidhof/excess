@@ -45,6 +45,15 @@ var events;
 /// <reference path="event/event.ts" />
 /// <reference path="phoenix.d.ts" />
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
+var chan;
+var c;
+window.onload = function () {
+    var id = Math.random().toString(36).substr(2, 2);
+    console.log('id: ', id);
+    c = new excess.ExcessClient("//localhost:4000/excess", id);
+    c.joinRoom('debug');
+};
+/// <reference path="excess.ts" />
 var excess;
 (function (excess) {
     var ExcessClient = (function () {
@@ -92,7 +101,7 @@ var excess;
             this.id = id;
             this.connections = {};
             this.rtcConfig = { "iceServers": iceServers };
-            this.signaller = new Signaller(signalEndpoint, id);
+            this.signaller = new excess.Signaller(signalEndpoint, id);
             //Subscribe to signalling messages from others (someone trying to connect to local peer).
             this.signaller.onSignal.add(this.receiveSignalMessage);
         }
@@ -103,7 +112,7 @@ var excess;
         };
         ExcessClient.prototype.createPeer = function (id) {
             var _this = this;
-            var peer = new ExcessPeer(id, this.signaller, this.rtcConfig);
+            var peer = new excess.ExcessPeer(id, this.signaller, this.rtcConfig);
             this.connections[id] = peer;
             peer.onClose.add(function () {
                 delete _this.connections[id];
@@ -117,6 +126,10 @@ var excess;
         return ExcessClient;
     })();
     excess.ExcessClient = ExcessClient;
+})(excess || (excess = {}));
+/// <reference path="excess.ts" />
+var excess;
+(function (excess) {
     var ExcessPeer = (function () {
         function ExcessPeer(id, signaller, rtcConfig) {
             var _this = this;
@@ -214,6 +227,10 @@ var excess;
         return ExcessPeer;
     })();
     excess.ExcessPeer = ExcessPeer;
+})(excess || (excess = {}));
+/// <reference path="excess.ts" />
+var excess;
+(function (excess) {
     var Signaller = (function () {
         function Signaller(endPoint, id) {
             var _this = this;
@@ -272,12 +289,4 @@ var excess;
     })();
     excess.Signaller = Signaller;
 })(excess || (excess = {}));
-var chan;
-var c;
-window.onload = function () {
-    var id = Math.random().toString(36).substr(2, 2);
-    console.log('id: ', id);
-    c = new excess.ExcessClient("//localhost:4000/excess", id);
-    c.joinRoom('debug');
-};
 //# sourceMappingURL=excess.js.map
