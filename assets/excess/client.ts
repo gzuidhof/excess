@@ -23,6 +23,11 @@ module excess {
         }
 
         connect(id: string): ExcessPeer {
+            if (id == this.id) {
+                console.error('You can\'t connect to yourself!');
+                return null;
+            }
+
             var peer = this.createPeer(id);
             peer.call();
 
