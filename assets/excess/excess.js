@@ -45,13 +45,12 @@ var events;
 /// <reference path="event/event.ts" />
 /// <reference path="phoenix.d.ts" />
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
-var chan;
 var c;
 window.onload = function () {
     var id = Math.random().toString(36).substr(2, 2);
     console.log('id: ', id);
     c = new excess.ExcessClient("//localhost:4000/excess", id);
-    c.joinRoom('debug');
+    c.joinRoom('__debug');
 };
 /// <reference path="excess.ts" />
 var excess;
@@ -106,6 +105,10 @@ var excess;
             this.signaller.onSignal.add(this.receiveSignalMessage);
         }
         ExcessClient.prototype.connect = function (id) {
+            if (id == this.id) {
+                console.error('You can\'t connect to yourself!');
+                return null;
+            }
             var peer = this.createPeer(id);
             peer.call();
             return peer;
@@ -135,18 +138,14 @@ var excess;
             var _this = this;
             this.remoteDescriptionSet = false;
             this.onClose = new events.TypedEvent();
-            //If the offer was not created, onOfferError below is called
-            this.onOfferCreate = function (sdp) {
+            //Called when offer or answer is done creating
+            //If the offer/answer was not created, onOfferError below is called
+            this.onSDPCreate = function (sdp) {
                 _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded);
                 _this.signaller.signal(_this.id, sdp);
             };
-            this.onOfferError = function (event) {
+            this.onSDPError = function (event) {
                 console.error(event);
-            };
-            this.onRemoteDescrAdded = function () {
-                console.log("Set remote description.");
-                _this.remoteDescriptionSet = true;
-                _this.addIceBuffer();
             };
             this.onLocalDescrAdded = function () {
                 console.log('Set local description ', _this.caller ? '(OFFER).' : '(ANSWER).');
@@ -173,21 +172,23 @@ var excess;
             this.signaller = signaller;
             this.id = id;
             this.iceBuffer = [];
-            this.connection = new RTCPeerConnection(rtcConfig);
+            this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
+            // this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
+            this.connection.createDataChannel('excess');
             this.connection.ondatachannel = function (event) { return _this.addDataChannel(event.channel); };
             this.connection.onicecandidate = this.onIceCandidate;
         }
         //Call someone
         ExcessPeer.prototype.call = function () {
             this.caller = true;
-            chan = this.createDataChannel('awroo');
-            this.connection.createOffer(this.onOfferCreate, this.onOfferError);
+            this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         };
         ExcessPeer.prototype.answer = function (offerSDP) {
+            var _this = this;
             this.caller = false;
-            var sdp = new RTCSessionDescription(offerSDP);
-            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
-            this.connection.createAnswer(this.onOfferCreate, this.onOfferError);
+            this.setRemoteDescription(offerSDP, 
+            //Create answer after setting remote description
+            function () { return _this.connection.createAnswer(_this.onSDPCreate, _this.onSDPError); });
         };
         ExcessPeer.prototype.createDataChannel = function (label, opts) {
             if (opts === void 0) { opts = {}; }
@@ -198,6 +199,7 @@ var excess;
         };
         ExcessPeer.prototype.addDataChannel = function (channel) {
             console.log('Added data channel ', channel);
+            channel.onopen = function (event) { return console.log("CHANNEL OPEN ", event); };
             channel.onmessage = this.onMessage;
             channel.onerror = this.onError;
             channel.onclose = this._onClose;
@@ -214,10 +216,21 @@ var excess;
                 this.iceBuffer.push(candidate);
             }
         };
-        ExcessPeer.prototype.setRemoteDescription = function (sdpi) {
+        ExcessPeer.prototype.setRemoteDescription = function (sdpi, callback) {
+            var _this = this;
+            if (callback === void 0) { callback = function () {
+            }; }
+            console.log("Attempting to set remote description.");
             var sdp = new RTCSessionDescription(sdpi);
-            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
+            this.connection.setRemoteDescription(sdp, function () {
+                //Called after remote description is set
+                console.log("Set remote description", _this.caller ? '(ANSWER).' : '(OFFER).');
+                _this.remoteDescriptionSet = true;
+                _this.addIceBuffer();
+                callback.apply(_this);
+            }, function (ev) { return console.error('Failed to set remote descr', ev); });
         };
+        //Add every entry of the ICE buffer.
         ExcessPeer.prototype.addIceBuffer = function () {
             while (this.iceBuffer.length > 0) {
                 var candy = this.iceBuffer.shift();

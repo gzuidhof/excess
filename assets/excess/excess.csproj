@@ -23,9 +23,12 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="client.ts" />
     <TypeScriptCompile Include="excess.ts" />
     <TypeScriptCompile Include="event\event.ts" />
+    <TypeScriptCompile Include="peer.ts" />
     <TypeScriptCompile Include="phoenix.d.ts" />
+    <TypeScriptCompile Include="signaller.ts" />
     <TypeScriptCompile Include="typings\webrtc\MediaStream.d.ts" />
     <TypeScriptCompile Include="typings\webrtc\RTCPeerConnection.d.ts" />
   </ItemGroup>

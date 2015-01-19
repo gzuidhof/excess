@@ -18,7 +18,9 @@ module excess {
             this.signaller = signaller;
             this.id = id;
             this.iceBuffer = [];
-            this.connection = new RTCPeerConnection(rtcConfig);
+            this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
+           // this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
+            this.connection.createDataChannel('excess');
             this.connection.ondatachannel = (event: any) => this.addDataChannel(event.channel);
             this.connection.onicecandidate = this.onIceCandidate;
         }
@@ -26,26 +28,27 @@ module excess {
         //Call someone
         call() {
             this.caller = true;
-            chan = this.createDataChannel('awroo');
-            this.connection.createOffer(this.onOfferCreate, this.onOfferError);
+            this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         }
 
         answer(offerSDP: RTCSessionDescriptionInit) {
             this.caller = false;
 
-            var sdp = new RTCSessionDescription(offerSDP);
-            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
-            this.connection.createAnswer(this.onOfferCreate, this.onOfferError);
+            this.setRemoteDescription(offerSDP,
+                //Create answer after setting remote description
+                () => this.connection.createAnswer(this.onSDPCreate, this.onSDPError)
+            );
+            
         }
 
-
-        //If the offer was not created, onOfferError below is called
-        onOfferCreate = (sdp: RTCSessionDescription) => {
+        //Called when offer or answer is done creating
+        //If the offer/answer was not created, onOfferError below is called
+        onSDPCreate = (sdp: RTCSessionDescription) => {
             this.connection.setLocalDescription(sdp, this.onLocalDescrAdded);
             this.signaller.signal(this.id, sdp);
         }
 
-        onOfferError = (event) => {
+        onSDPError = (event) => {
             console.error(event);
         }
 
@@ -56,8 +59,10 @@ module excess {
             return channel;
         }
 
-        addDataChannel(channel: RTCDataChannel) {
+        private addDataChannel(channel: RTCDataChannel) {
             console.log('Added data channel ', channel);
+            channel.onopen = (event) => console.log("CHANNEL OPEN ", event);
+            
             channel.onmessage = this.onMessage;
             channel.onerror = this.onError;
             channel.onclose = this._onClose;
@@ -76,15 +81,21 @@ module excess {
             }
         }
 
-        setRemoteDescription(sdpi: RTCSessionDescriptionInit) {
+        setRemoteDescription(sdpi: RTCSessionDescriptionInit, callback = () => { }) {
+            console.log("Attempting to set remote description.");
             var sdp = new RTCSessionDescription(sdpi);
-            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
-        }
 
-        private onRemoteDescrAdded = () => {
-            console.log("Set remote description.");
-            this.remoteDescriptionSet = true;
-            this.addIceBuffer();
+            this.connection.setRemoteDescription(sdp, 
+                () => {
+                    //Called after remote description is set
+                    console.log("Set remote description", this.caller ? '(ANSWER).' : '(OFFER).');
+                    this.remoteDescriptionSet = true;
+                    this.addIceBuffer();
+                    callback.apply(this);
+                },
+                (ev) => console.error('Failed to set remote descr', ev)
+            );
+            
         }
 
         private onLocalDescrAdded = () => {
@@ -92,8 +103,8 @@ module excess {
         }
 
 
-
-        addIceBuffer() {
+        //Add every entry of the ICE buffer.
+        private addIceBuffer() {
             while (this.iceBuffer.length > 0) {
                 var candy = this.iceBuffer.shift();
                 this.addIceCandidate(candy);
@@ -114,7 +125,7 @@ module excess {
         }
 
         //Called when ICE candidate is received from STUN server.
-        onIceCandidate = (event: any) => {
+        private onIceCandidate = (event: any) => {
 
             if (event.candidate) {
                 var candy = {
