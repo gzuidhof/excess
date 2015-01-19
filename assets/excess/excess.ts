@@ -24,23 +24,39 @@ module excess {
             this.signaller.onSignal.add(this.receiveSignalMessage)
         }
 
-        connect(id: string) {
+        connect(id: string): ExcessPeer {
+            var peer = this.createPeer(id);
+            peer.call();
+
+            return peer;
+        }
+
+        createPeer(id: string): ExcessPeer {
             var peer = new ExcessPeer(id, this.signaller, this.rtcConfig);
             this.connections[id] = peer;
-            peer.call();
+
+            peer.onClose.add(() => {
+                delete this.connections[id];
+            });
+
+            return peer;
         }
 
         receiveSignalMessage = (from: string, data: any) => {
             //Currently connected or signalling
             var known = (this.connections[from]) ? true : false;
 
-            if (data.type == "offer") {
+
+            if (!data) {
+                console.error("Received empty signalling message, error from server?");
+            }
+            else if (data.type == "offer") {
                 if (known) {
                     console.error("Already have a connection with fromId!");
                 }
                 else {
-                    var peer = new ExcessPeer(from, this.signaller, this.rtcConfig);
-                    this.connections[from] = peer;
+                    console.log("Received OFFER from", from, data);
+                    var peer = this.createPeer(from);
                     peer.answer(data);
                 }
             }
@@ -49,15 +65,17 @@ module excess {
                     console.error("Received answer SDP from unknown peer: ", from);
                 }
                 else {
+                    console.log("Received ANSWER from ", from, data);
                     this.connections[from].setRemoteDescription(data);
                 }
             }
-            else if (data.ice) {
+            else if (data.candidate) {
                 if (!known) {
                     console.error("Received ICE candidate from unknown peer: ", from);
                 }
                 else {
-                    this.connections[from].addIceCandidate(data.ice);
+                    console.log("Received ICE candidate from", from, data.candidate);
+                    this.connections[from].addIceCandidate(data.candidate);
                 }
             }
             else {
@@ -79,31 +97,42 @@ module excess {
         signaller: Signaller;
         id: string;
         connection: RTCPeerConnection;
-
         caller: boolean;
+
+
+        remoteDescriptionSet: boolean = false;
+        iceBuffer: RTCIceCandidate[];
+
+        public onClose: events.IEvent = new events.TypedEvent();
 
         constructor(id: string, signaller: Signaller, rtcConfig: RTCConfiguration) {
             this.signaller = signaller;
             this.id = id;
+            this.iceBuffer = [];
             this.connection = new RTCPeerConnection(rtcConfig);
+            this.connection.ondatachannel = (event: any) => this.addDataChannel(event.channel);
+            this.connection.onicecandidate = this.onIceCandidate;
         }
 
         //Call someone
         call() {
             this.caller = true;
+            chan = this.createDataChannel('awroo');
             this.connection.createOffer(this.onOfferCreate, this.onOfferError);
         }
 
-        answer(offerSDP: RTCSessionDescription) {
+        answer(offerSDP: RTCSessionDescriptionInit) {
             this.caller = false;
-            this.connection.setRemoteDescription(offerSDP);
+
+            var sdp = new RTCSessionDescription(offerSDP);
+            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
             this.connection.createAnswer(this.onOfferCreate, this.onOfferError);
         }
 
 
         //If the offer was not created, onOfferError below is called
         onOfferCreate = (sdp: RTCSessionDescription) => {
-            this.connection.setLocalDescription(sdp);
+            this.connection.setLocalDescription(sdp, this.onLocalDescrAdded);
             this.signaller.signal(this.id, sdp);
         }
 
@@ -111,42 +140,79 @@ module excess {
             console.error(event);
         }
 
-        createDataChannel(label: string, opts: RTCDataChannelInit) {
+        createDataChannel(label: string, opts: RTCDataChannelInit = {}): RTCDataChannel {
+            console.log('Creating data channel ',label, ' opts:',  opts);
             var channel = this.connection.createDataChannel(label, opts);
-            
+            this.addDataChannel(channel);
+            return channel;
         }
 
         addDataChannel(channel: RTCDataChannel) {
+            console.log('Added data channel ', channel);
             channel.onmessage = this.onMessage;
             channel.onerror = this.onError;
-            channel.onclose = this.onClose;
+            channel.onclose = this._onClose;
         }
 
         addIceCandidate(candidate: RTCIceCandidate) {
-            this.connection.addIceCandidate(candidate);
+            //Can only add ICE candidates after remote description has been set
+            //So we buffer 'em in case it's not set yet.
+            if (this.remoteDescriptionSet) {
+                var can = new RTCIceCandidate(candidate);
+                this.connection.addIceCandidate(can)
+            }
+            else {
+                console.log("Buffering ICE candidate");
+                this.iceBuffer.push(candidate);
+            }
         }
 
-        setRemoteDescription(sdp: RTCSessionDescription) {
-            this.connection.setRemoteDescription(sdp, () => { console.log("Set remote description.") });
+        setRemoteDescription(sdpi: RTCSessionDescriptionInit) {
+            var sdp = new RTCSessionDescription(sdpi);
+            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
         }
-       
 
-        onMessage = (event: RTCMessageEvent) => {
+        private onRemoteDescrAdded = () => {
+            console.log("Set remote description.");
+            this.remoteDescriptionSet = true;
+            this.addIceBuffer();
+        }
+
+        private onLocalDescrAdded = () => {
+            console.log('Set local description ', this.caller ? '(OFFER).' : '(ANSWER).')
+        }
+
+
+
+        addIceBuffer() {
+            while (this.iceBuffer.length > 0) {
+                var candy = this.iceBuffer.shift();
+                this.addIceCandidate(candy);
+            }
+        }
+
+
+        private onMessage = (event: RTCMessageEvent) => {
             console.log(event.data);
         }
 
-        onError = (event) => {
+        private onError = (event) => {
             console.log('channel.onerror', event);
         }
 
-        onClose = (event) => {
-            console.log('channel.onclose', event);
+        private _onClose = (event) => {
+            this.onClose.trigger();
         }
 
         //Called when ICE candidate is received from STUN server.
-        onIceCandidate = (event: RTCIceCandidateEvent) => {
+        onIceCandidate = (event: any) => {
+           
             if (event.candidate) {
-                this.signaller.signal(this.id, event.candidate);
+                var candy = {
+                    sdpMLineIndex: event.sdpMLineIndex,
+                    candidate: event.candidate
+                };
+                this.signaller.signal(this.id, candy);
             }
         }
 
@@ -194,7 +260,7 @@ module excess {
             
 
             channel.on("msg:user", (message: ExcessSignalMessage) => {
-                console.log("Received message: ", message);
+               // console.log("Received signalling message: ", message);
                 this.onSignal.trigger(message.from, message.data);
             });
         }
@@ -225,6 +291,8 @@ module excess {
         */
         public signal(toId: string, payload: any) {
             var from = this.id;
+            console.log('Signalling to ', toId, payload);
+
             this.signalChannel.send("msg:user", { to: toId, data: payload });
         }
         
@@ -243,7 +311,7 @@ module excess {
         trigger(from: string, data: any): void;
     }
 }
-
+var chan;
 var c;
 window.onload = () => {
     var id = Math.random().toString(36).substr(2, 2);

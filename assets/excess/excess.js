@@ -54,13 +54,16 @@ var excess;
             this.receiveSignalMessage = function (from, data) {
                 //Currently connected or signalling
                 var known = (_this.connections[from]) ? true : false;
-                if (data.type == "offer") {
+                if (!data) {
+                    console.error("Received empty signalling message, error from server?");
+                }
+                else if (data.type == "offer") {
                     if (known) {
                         console.error("Already have a connection with fromId!");
                     }
                     else {
-                        var peer = new ExcessPeer(from, _this.signaller, _this.rtcConfig);
-                        _this.connections[from] = peer;
+                        console.log("Received OFFER from", from, data);
+                        var peer = _this.createPeer(from);
                         peer.answer(data);
                     }
                 }
@@ -69,15 +72,17 @@ var excess;
                         console.error("Received answer SDP from unknown peer: ", from);
                     }
                     else {
+                        console.log("Received ANSWER from ", from, data);
                         _this.connections[from].setRemoteDescription(data);
                     }
                 }
-                else if (data.ice) {
+                else if (data.candidate) {
                     if (!known) {
                         console.error("Received ICE candidate from unknown peer: ", from);
                     }
                     else {
-                        _this.connections[from].addIceCandidate(data.ice);
+                        console.log("Received ICE candidate from", from, data.candidate);
+                        _this.connections[from].addIceCandidate(data.candidate);
                     }
                 }
                 else {
@@ -92,9 +97,18 @@ var excess;
             this.signaller.onSignal.add(this.receiveSignalMessage);
         }
         ExcessClient.prototype.connect = function (id) {
+            var peer = this.createPeer(id);
+            peer.call();
+            return peer;
+        };
+        ExcessClient.prototype.createPeer = function (id) {
+            var _this = this;
             var peer = new ExcessPeer(id, this.signaller, this.rtcConfig);
             this.connections[id] = peer;
-            peer.call();
+            peer.onClose.add(function () {
+                delete _this.connections[id];
+            });
+            return peer;
         };
         ExcessClient.prototype.joinRoom = function (room) {
             this.currentRoom = room;
@@ -106,13 +120,23 @@ var excess;
     var ExcessPeer = (function () {
         function ExcessPeer(id, signaller, rtcConfig) {
             var _this = this;
+            this.remoteDescriptionSet = false;
+            this.onClose = new events.TypedEvent();
             //If the offer was not created, onOfferError below is called
             this.onOfferCreate = function (sdp) {
-                _this.connection.setLocalDescription(sdp);
+                _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded);
                 _this.signaller.signal(_this.id, sdp);
             };
             this.onOfferError = function (event) {
                 console.error(event);
+            };
+            this.onRemoteDescrAdded = function () {
+                console.log("Set remote description.");
+                _this.remoteDescriptionSet = true;
+                _this.addIceBuffer();
+            };
+            this.onLocalDescrAdded = function () {
+                console.log('Set local description ', _this.caller ? '(OFFER).' : '(ANSWER).');
             };
             this.onMessage = function (event) {
                 console.log(event.data);
@@ -120,44 +144,72 @@ var excess;
             this.onError = function (event) {
                 console.log('channel.onerror', event);
             };
-            this.onClose = function (event) {
-                console.log('channel.onclose', event);
+            this._onClose = function (event) {
+                _this.onClose.trigger();
             };
             //Called when ICE candidate is received from STUN server.
             this.onIceCandidate = function (event) {
                 if (event.candidate) {
-                    _this.signaller.signal(_this.id, event.candidate);
+                    var candy = {
+                        sdpMLineIndex: event.sdpMLineIndex,
+                        candidate: event.candidate
+                    };
+                    _this.signaller.signal(_this.id, candy);
                 }
             };
             this.signaller = signaller;
             this.id = id;
+            this.iceBuffer = [];
             this.connection = new RTCPeerConnection(rtcConfig);
+            this.connection.ondatachannel = function (event) { return _this.addDataChannel(event.channel); };
+            this.connection.onicecandidate = this.onIceCandidate;
         }
         //Call someone
         ExcessPeer.prototype.call = function () {
             this.caller = true;
+            chan = this.createDataChannel('awroo');
             this.connection.createOffer(this.onOfferCreate, this.onOfferError);
         };
         ExcessPeer.prototype.answer = function (offerSDP) {
             this.caller = false;
-            this.connection.setRemoteDescription(offerSDP);
+            var sdp = new RTCSessionDescription(offerSDP);
+            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
             this.connection.createAnswer(this.onOfferCreate, this.onOfferError);
         };
         ExcessPeer.prototype.createDataChannel = function (label, opts) {
+            if (opts === void 0) { opts = {}; }
+            console.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
+            this.addDataChannel(channel);
+            return channel;
         };
         ExcessPeer.prototype.addDataChannel = function (channel) {
+            console.log('Added data channel ', channel);
             channel.onmessage = this.onMessage;
             channel.onerror = this.onError;
-            channel.onclose = this.onClose;
+            channel.onclose = this._onClose;
         };
         ExcessPeer.prototype.addIceCandidate = function (candidate) {
-            this.connection.addIceCandidate(candidate);
+            //Can only add ICE candidates after remote description has been set
+            //So we buffer 'em in case it's not set yet.
+            if (this.remoteDescriptionSet) {
+                var can = new RTCIceCandidate(candidate);
+                this.connection.addIceCandidate(can);
+            }
+            else {
+                console.log("Buffering ICE candidate");
+                this.iceBuffer.push(candidate);
+            }
         };
-        ExcessPeer.prototype.setRemoteDescription = function (sdp) {
-            this.connection.setRemoteDescription(sdp, function () {
-                console.log("Set remote description.");
-            });
+        ExcessPeer.prototype.setRemoteDescription = function (sdpi) {
+            var sdp = new RTCSessionDescription(sdpi);
+            this.connection.setRemoteDescription(sdp, this.onRemoteDescrAdded);
+        };
+        ExcessPeer.prototype.addIceBuffer = function () {
+            while (this.iceBuffer.length > 0) {
+                var candy = this.iceBuffer.shift();
+                this.addIceCandidate(candy);
+            }
         };
         return ExcessPeer;
     })();
@@ -170,7 +222,7 @@ var excess;
                 _this.signalChannel = channel;
                 _this.currentRoom = channel.topic;
                 channel.on("msg:user", function (message) {
-                    console.log("Received message: ", message);
+                    // console.log("Received signalling message: ", message);
                     _this.onSignal.trigger(message.from, message.data);
                 });
             };
@@ -213,12 +265,14 @@ var excess;
         */
         Signaller.prototype.signal = function (toId, payload) {
             var from = this.id;
+            console.log('Signalling to ', toId, payload);
             this.signalChannel.send("msg:user", { to: toId, data: payload });
         };
         return Signaller;
     })();
     excess.Signaller = Signaller;
 })(excess || (excess = {}));
+var chan;
 var c;
 window.onload = function () {
     var id = Math.random().toString(36).substr(2, 2);
