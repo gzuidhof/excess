@@ -7,7 +7,7 @@ module excess {
         id: string;
         connection: RTCPeerConnection;
         caller: boolean = false;
-
+        channels: { [id: string]: Channel };
 
         remoteDescriptionSet: boolean = false;
         iceBuffer: RTCIceCandidate[];
@@ -18,6 +18,7 @@ module excess {
             this.signaller = signaller;
             this.id = id;
             this.iceBuffer = [];
+            this.channels = {};
             this.connection = new RTCPeerConnection(rtcConfig);
             this.connection.ondatachannel = (event: any) => this.addDataChannel(event.channel);
             this.connection.onnegotiationneeded = this.onNegotiationNeeded;
@@ -59,24 +60,25 @@ module excess {
             console.error(event);
         }
 
-        createDataChannel(label: string, opts: RTCDataChannelInit = {}): RTCDataChannel {
+        createDataChannel(label: string, opts: RTCDataChannelInit = {}): excess.Channel {
             console.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
-            this.addDataChannel(channel);
-            return channel;
+            return this.addDataChannel(channel);
         }
 
-        private addDataChannel(channel: RTCDataChannel) {
-            if (typeof channel != 'object') {
+        private addDataChannel(dc: RTCDataChannel): excess.Channel {
+            if (typeof dc != 'object') {
                 console.error('Data channel is not even an object!');
             }
-            console.log('Added data channel ', channel);
-            channel.onopen = (event) => console.log("\nCHANNEL OPEN ", event);
-            l = channel;
+            console.log('Added data channel ', dc);
+            var channelWrapper = new Channel(dc);
+            l = channelWrapper; //Temporary global var for debug purposes
+            this.channels[dc.label] = channelWrapper;
 
-            channel.onmessage = this.onMessage;
-            channel.onerror = this.onError;
-            channel.onclose = this._onClose;
+            this.channels[dc.label].onClose.add(() => delete this.channels[dc.label]);
+
+
+            return channelWrapper;
         }
 
         addIceCandidate(candidate: RTCIceCandidate) {
