@@ -31,8 +31,8 @@ module excess {
 
         //Call someone
         call() {
+            this.createDataChannel('excess');
             this.caller = true;
-            this.connection.createDataChannel('excess');
             this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         }
 
@@ -63,7 +63,6 @@ module excess {
             console.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
             this.addDataChannel(channel);
-            r = channel;
             return channel;
         }
 
@@ -135,8 +134,8 @@ module excess {
         }
 
         private _onClose = (event) => {
-            console.warn('Closed channel ', event);
-            this.onClose.trigger();
+            console.warn('\nCHANNEL CLOSE ', event);
+            //this.onClose.trigger();
         }
 
         private onStateChange = (event) => {

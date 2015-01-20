@@ -11,7 +11,7 @@ module excess {
 
         rtcConfig: RTCConfiguration;
 
-        constructor(signalEndpoint: string, id: string, iceServers: any[]= [{ "url": "stun:stun.l.google.com:19302" }]) {
+        constructor(signalEndpoint: string, id: string, iceServers: any[]= [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302"}]) {
             this.id = id;
             this.connections = {};
             this.rtcConfig = { "iceServers": iceServers };

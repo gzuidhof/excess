@@ -160,8 +160,8 @@ var excess;
                 console.log('channel.onerror', event);
             };
             this._onClose = function (event) {
-                console.warn('Closed channel ', event);
-                _this.onClose.trigger();
+                console.warn('\nCHANNEL CLOSE ', event);
+                //this.onClose.trigger();
             };
             this.onStateChange = function (event) {
                 console.log('Connection state change ', event);
@@ -196,8 +196,8 @@ var excess;
         }
         //Call someone
         ExcessPeer.prototype.call = function () {
+            this.createDataChannel('excess');
             this.caller = true;
-            this.connection.createDataChannel('excess');
             this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         };
         ExcessPeer.prototype.answer = function (offerSDP) {
@@ -214,7 +214,6 @@ var excess;
             console.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
             this.addDataChannel(channel);
-            r = channel;
             return channel;
         };
         ExcessPeer.prototype.addDataChannel = function (channel) {
