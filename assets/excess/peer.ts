@@ -21,7 +21,7 @@ module excess {
             this.channels = {};
             this.connection = new RTCPeerConnection(rtcConfig);
             this.connection.ondatachannel = (event: any) => this.addDataChannel(event.channel);
-            this.connection.onnegotiationneeded = this.onNegotiationNeeded;
+            this.connection.onnegotiationneeded = (e) => console.warn("Negotation needed!");
             
             this.connection.onicecandidate = this.onIceCandidate;
             this.connection.onstatechange = this.onStateChange;
@@ -126,20 +126,6 @@ module excess {
             }
         }
 
-
-        private onMessage = (event: RTCMessageEvent) => {
-            console.log(event.data);
-        }
-
-        private onError = (event) => {
-            console.log('channel.onerror', event);
-        }
-
-        private _onClose = (event) => {
-            console.warn('\nCHANNEL CLOSE ', event);
-            //this.onClose.trigger();
-        }
-
         private onStateChange = (event) => {
             console.log('Connection state change ', event);           
         }
@@ -147,12 +133,6 @@ module excess {
         private onIceStateChange = (event) => {
             console.log('ICE state changed: connection:', this.connection.iceConnectionState, 'gathering:', this.connection.iceGatheringState);
         }
-
-        private onNegotiationNeeded = (event) => {
-            console.warn("Negotation needed!");
-            //this.connection.createOffer(this.onSDPCreate, this.onSDPError);
-        }
-
         
 
 

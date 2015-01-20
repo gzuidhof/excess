@@ -75,25 +75,11 @@ var excess;
             this.onLocalDescrAdded = function () {
                 console.log('Set local description ', _this.caller ? '(OFFER).' : '(ANSWER).');
             };
-            this.onMessage = function (event) {
-                console.log(event.data);
-            };
-            this.onError = function (event) {
-                console.log('channel.onerror', event);
-            };
-            this._onClose = function (event) {
-                console.warn('\nCHANNEL CLOSE ', event);
-                //this.onClose.trigger();
-            };
             this.onStateChange = function (event) {
                 console.log('Connection state change ', event);
             };
             this.onIceStateChange = function (event) {
                 console.log('ICE state changed: connection:', _this.connection.iceConnectionState, 'gathering:', _this.connection.iceGatheringState);
-            };
-            this.onNegotiationNeeded = function (event) {
-                console.warn("Negotation needed!");
-                //this.connection.createOffer(this.onSDPCreate, this.onSDPError);
             };
             //Called when ICE candidate is received from STUN server.
             this.onIceCandidate = function (event) {
@@ -112,7 +98,7 @@ var excess;
             this.channels = {};
             this.connection = new RTCPeerConnection(rtcConfig);
             this.connection.ondatachannel = function (event) { return _this.addDataChannel(event.channel); };
-            this.connection.onnegotiationneeded = this.onNegotiationNeeded;
+            this.connection.onnegotiationneeded = function (e) { return console.warn("Negotation needed!"); };
             this.connection.onicecandidate = this.onIceCandidate;
             this.connection.onstatechange = this.onStateChange;
             this.connection.oniceconnectionstatechange = this.onIceStateChange;
