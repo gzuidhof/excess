@@ -35,10 +35,12 @@ module excess {
         }
 
         createPeer(id: string): ExcessPeer {
+            console.log('Creating peer for ', id);
             var peer = new ExcessPeer(id, this.signaller, this.rtcConfig);
             this.connections[id] = peer;
 
             peer.onClose.add(() => {
+                console.log('Connection to ', id, 'closed, deleting peer');
                 delete this.connections[id];
             });
 
@@ -55,13 +57,11 @@ module excess {
             }
             else if (data.type == "offer") {
                 if (known) {
-                    console.error("Already have a connection with fromId!");
+                    console.warn("Already have a connection with fromId!");
                 }
-                else {
-                    console.log("Received OFFER from", from, data);
-                    var peer = this.createPeer(from);
-                    peer.answer(data);
-                }
+                console.log("Received OFFER from", from, data);
+                var peer = this.createPeer(from);
+                peer.answer(data);
             }
             else if (data.type == "answer") {
                 if (!known) {
@@ -77,8 +77,8 @@ module excess {
                     console.error("Received ICE candidate from unknown peer: ", from);
                 }
                 else {
-                    console.log("Received ICE candidate from", from, data.candidate);
-                    this.connections[from].addIceCandidate(data.candidate);
+                    console.log("Received ICE candidate from", from, data);
+                    this.connections[from].addIceCandidate(data);
                 }
             }
             else {

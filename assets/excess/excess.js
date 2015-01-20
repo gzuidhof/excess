@@ -46,6 +46,8 @@ var events;
 /// <reference path="phoenix.d.ts" />
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
 var c;
+var l;
+var r;
 window.onload = function () {
     var id = Math.random().toString(36).substr(2, 2);
     console.log('id: ', id);
@@ -67,13 +69,11 @@ var excess;
                 }
                 else if (data.type == "offer") {
                     if (known) {
-                        console.error("Already have a connection with fromId!");
+                        console.warn("Already have a connection with fromId!");
                     }
-                    else {
-                        console.log("Received OFFER from", from, data);
-                        var peer = _this.createPeer(from);
-                        peer.answer(data);
-                    }
+                    console.log("Received OFFER from", from, data);
+                    var peer = _this.createPeer(from);
+                    peer.answer(data);
                 }
                 else if (data.type == "answer") {
                     if (!known) {
@@ -89,8 +89,8 @@ var excess;
                         console.error("Received ICE candidate from unknown peer: ", from);
                     }
                     else {
-                        console.log("Received ICE candidate from", from, data.candidate);
-                        _this.connections[from].addIceCandidate(data.candidate);
+                        console.log("Received ICE candidate from", from, data);
+                        _this.connections[from].addIceCandidate(data);
                     }
                 }
                 else {
@@ -115,9 +115,11 @@ var excess;
         };
         ExcessClient.prototype.createPeer = function (id) {
             var _this = this;
+            console.log('Creating peer for ', id);
             var peer = new excess.ExcessPeer(id, this.signaller, this.rtcConfig);
             this.connections[id] = peer;
             peer.onClose.add(function () {
+                console.log('Connection to ', id, 'closed, deleting peer');
                 delete _this.connections[id];
             });
             return peer;
@@ -136,12 +138,13 @@ var excess;
     var ExcessPeer = (function () {
         function ExcessPeer(id, signaller, rtcConfig) {
             var _this = this;
+            this.caller = false;
             this.remoteDescriptionSet = false;
             this.onClose = new events.TypedEvent();
             //Called when offer or answer is done creating
             //If the offer/answer was not created, onOfferError below is called
             this.onSDPCreate = function (sdp) {
-                _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded);
+                _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded, function () { return console.log("Failed to set local description!"); });
                 _this.signaller.signal(_this.id, sdp);
             };
             this.onSDPError = function (event) {
@@ -157,14 +160,26 @@ var excess;
                 console.log('channel.onerror', event);
             };
             this._onClose = function (event) {
+                console.warn('Closed channel ', event);
                 _this.onClose.trigger();
+            };
+            this.onStateChange = function (event) {
+                console.log('Connection state change ', event);
+            };
+            this.onIceStateChange = function (event) {
+                console.log('ICE state changed: connection:', _this.connection.iceConnectionState, 'gathering:', _this.connection.iceGatheringState);
+            };
+            this.onNegotiationNeeded = function (event) {
+                console.warn("Negotation needed!");
+                //this.connection.createOffer(this.onSDPCreate, this.onSDPError);
             };
             //Called when ICE candidate is received from STUN server.
             this.onIceCandidate = function (event) {
                 if (event.candidate) {
                     var candy = {
-                        sdpMLineIndex: event.sdpMLineIndex,
-                        candidate: event.candidate
+                        sdpMLineIndex: event.candidate.sdpMLineIndex,
+                        sdpMid: event.candidate.sdpMid,
+                        candidate: event.candidate.candidate
                     };
                     _this.signaller.signal(_this.id, candy);
                 }
@@ -172,20 +187,24 @@ var excess;
             this.signaller = signaller;
             this.id = id;
             this.iceBuffer = [];
-            this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
-            // this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
-            this.connection.createDataChannel('excess');
+            this.connection = new RTCPeerConnection(rtcConfig);
             this.connection.ondatachannel = function (event) { return _this.addDataChannel(event.channel); };
+            this.connection.onnegotiationneeded = this.onNegotiationNeeded;
             this.connection.onicecandidate = this.onIceCandidate;
+            this.connection.onstatechange = this.onStateChange;
+            this.connection.oniceconnectionstatechange = this.onIceStateChange;
         }
         //Call someone
         ExcessPeer.prototype.call = function () {
             this.caller = true;
+            this.connection.createDataChannel('excess');
             this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         };
         ExcessPeer.prototype.answer = function (offerSDP) {
             var _this = this;
-            this.caller = false;
+            if (this.caller) {
+                this.caller = false;
+            }
             this.setRemoteDescription(offerSDP, 
             //Create answer after setting remote description
             function () { return _this.connection.createAnswer(_this.onSDPCreate, _this.onSDPError); });
@@ -195,11 +214,16 @@ var excess;
             console.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
             this.addDataChannel(channel);
+            r = channel;
             return channel;
         };
         ExcessPeer.prototype.addDataChannel = function (channel) {
+            if (typeof channel != 'object') {
+                console.error('Data channel is not even an object!');
+            }
             console.log('Added data channel ', channel);
-            channel.onopen = function (event) { return console.log("CHANNEL OPEN ", event); };
+            channel.onopen = function (event) { return console.log("\nCHANNEL OPEN ", event); };
+            l = channel;
             channel.onmessage = this.onMessage;
             channel.onerror = this.onError;
             channel.onclose = this._onClose;

@@ -3,6 +3,9 @@
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
 module excess {}
 var c;
+var l;
+var r;
+
 window.onload = () => {
     var id = Math.random().toString(36).substr(2, 2);
     console.log('id: ', id);

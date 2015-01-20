@@ -6,7 +6,7 @@ module excess {
         signaller: Signaller;
         id: string;
         connection: RTCPeerConnection;
-        caller: boolean;
+        caller: boolean = false;
 
 
         remoteDescriptionSet: boolean = false;
@@ -18,21 +18,28 @@ module excess {
             this.signaller = signaller;
             this.id = id;
             this.iceBuffer = [];
-            this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
-           // this.connection = new RTCPeerConnection(rtcConfig, { optional: [{ RtpDataChannels: true }] });
-            this.connection.createDataChannel('excess');
+            this.connection = new RTCPeerConnection(rtcConfig);
             this.connection.ondatachannel = (event: any) => this.addDataChannel(event.channel);
+            this.connection.onnegotiationneeded = this.onNegotiationNeeded;
+            
             this.connection.onicecandidate = this.onIceCandidate;
+            this.connection.onstatechange = this.onStateChange;
+            this.connection.oniceconnectionstatechange = this.onIceStateChange;
+
+            
         }
 
         //Call someone
         call() {
             this.caller = true;
+            this.connection.createDataChannel('excess');
             this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         }
 
         answer(offerSDP: RTCSessionDescriptionInit) {
-            this.caller = false;
+            if (this.caller) {
+                this.caller = false;
+            }
 
             this.setRemoteDescription(offerSDP,
                 //Create answer after setting remote description
@@ -44,7 +51,7 @@ module excess {
         //Called when offer or answer is done creating
         //If the offer/answer was not created, onOfferError below is called
         onSDPCreate = (sdp: RTCSessionDescription) => {
-            this.connection.setLocalDescription(sdp, this.onLocalDescrAdded);
+            this.connection.setLocalDescription(sdp, this.onLocalDescrAdded, () => console.log("Failed to set local description!"));
             this.signaller.signal(this.id, sdp);
         }
 
@@ -56,13 +63,18 @@ module excess {
             console.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
             this.addDataChannel(channel);
+            r = channel;
             return channel;
         }
 
         private addDataChannel(channel: RTCDataChannel) {
+            if (typeof channel != 'object') {
+                console.error('Data channel is not even an object!');
+            }
             console.log('Added data channel ', channel);
-            channel.onopen = (event) => console.log("CHANNEL OPEN ", event);
-            
+            channel.onopen = (event) => console.log("\nCHANNEL OPEN ", event);
+            l = channel;
+
             channel.onmessage = this.onMessage;
             channel.onerror = this.onError;
             channel.onclose = this._onClose;
@@ -80,6 +92,8 @@ module excess {
                 this.iceBuffer.push(candidate);
             }
         }
+
+
 
         setRemoteDescription(sdpi: RTCSessionDescriptionInit, callback = () => { }) {
             console.log("Attempting to set remote description.");
@@ -121,16 +135,34 @@ module excess {
         }
 
         private _onClose = (event) => {
+            console.warn('Closed channel ', event);
             this.onClose.trigger();
         }
+
+        private onStateChange = (event) => {
+            console.log('Connection state change ', event);           
+        }
+
+        private onIceStateChange = (event) => {
+            console.log('ICE state changed: connection:', this.connection.iceConnectionState, 'gathering:', this.connection.iceGatheringState);
+        }
+
+        private onNegotiationNeeded = (event) => {
+            console.warn("Negotation needed!");
+            //this.connection.createOffer(this.onSDPCreate, this.onSDPError);
+        }
+
+        
+
 
         //Called when ICE candidate is received from STUN server.
         private onIceCandidate = (event: any) => {
 
             if (event.candidate) {
                 var candy = {
-                    sdpMLineIndex: event.sdpMLineIndex,
-                    candidate: event.candidate
+                    sdpMLineIndex: event.candidate.sdpMLineIndex,
+                    sdpMid: event.candidate.sdpMid,
+                    candidate: event.candidate.candidate
                 };
                 this.signaller.signal(this.id, candy);
             }
