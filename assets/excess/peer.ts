@@ -24,6 +24,7 @@ module excess {
             this.connection.ondatachannel = (event: any) => {
                 this.addDataChannel(event.channel);
                 this.onDataChannelReceive.trigger(this.channels[event.channel.label]);
+
             }
             this.connection.onnegotiationneeded = (e) => console.warn("Negotation needed!");
             

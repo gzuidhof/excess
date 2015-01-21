@@ -3,7 +3,7 @@ module excess {
 
     export class Signaller {
 
-        socket: Phoenix.Socket;
+        socket: Phoenix.Socket;  
 
         private signalChannel: Phoenix.Channel;
         currentRoom: string; //In topic form "room:<room_id>"
@@ -88,7 +88,7 @@ module excess {
         data: any;
     }
 
-    interface SignalEvent extends events.IEvent {
+    export interface SignalEvent extends events.IEvent {
         add(listener: (from: string, data: any) => any): void;
         remove(listener: (from: string, data: any) => any): void;
         trigger(from: string, data: any): void;
