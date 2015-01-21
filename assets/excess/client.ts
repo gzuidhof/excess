@@ -77,7 +77,7 @@ module excess {
                     console.error("Received ICE candidate from unknown peer: ", from);
                 }
                 else {
-                    excess.log("Received ICE candidate from", from, data);
+                    excess.debug("Received ICE candidate from", from, data);
                     this.connections[from].addIceCandidate(data);
                 }
             }

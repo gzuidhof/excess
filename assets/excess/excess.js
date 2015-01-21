@@ -132,7 +132,7 @@ var excess;
                         console.error("Received ICE candidate from unknown peer: ", from);
                     }
                     else {
-                        excess.log("Received ICE candidate from", from, data);
+                        excess.debug("Received ICE candidate from", from, data);
                         _this.connections[from].addIceCandidate(data);
                     }
                 }
@@ -187,7 +187,7 @@ var excess;
             //Called when offer or answer is done creating
             //If the offer/answer was not created, onOfferError below is called
             this.onSDPCreate = function (sdp) {
-                _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded, function () { return excess.log("Failed to set local description!"); });
+                _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded, function () { return excess.err("Failed to set local description!"); });
                 _this.signaller.signal(_this.id, sdp);
             };
             this.onSDPError = function (event) {
@@ -347,7 +347,7 @@ var excess;
         */
         Signaller.prototype.signal = function (toId, payload) {
             var from = this.id;
-            excess.log('Signalling to ', toId, payload);
+            excess.debug('Signalling to ', toId, payload);
             this.signalChannel.send("msg:user", { to: toId, data: payload });
         };
         return Signaller;

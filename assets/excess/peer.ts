@@ -52,7 +52,7 @@ module excess {
         //Called when offer or answer is done creating
         //If the offer/answer was not created, onOfferError below is called
         onSDPCreate = (sdp: RTCSessionDescription) => {
-            this.connection.setLocalDescription(sdp, this.onLocalDescrAdded, () => excess.log("Failed to set local description!"));
+            this.connection.setLocalDescription(sdp, this.onLocalDescrAdded, () => excess.err("Failed to set local description!"));
             this.signaller.signal(this.id, sdp);
         }
 

@@ -74,7 +74,7 @@ module excess {
         */
         public signal(toId: string, payload: any) {
             var from = this.id;
-            excess.log('Signalling to ', toId, payload);
+            excess.debug('Signalling to ', toId, payload);
 
             this.signalChannel.send("msg:user", { to: toId, data: payload });
         }
