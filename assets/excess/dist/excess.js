@@ -183,12 +183,9 @@ function requestUserMedia(constraints) {
 var excess;
 (function(excess) {
   excess.log = console.log;
+  excess.debug = console.debug;
   excess.err = console.error;
 })(excess || (excess = {}));
-var c;
-var l;
-window.onload = function() {
-};
 var excess;
 (function(excess) {
   var Channel = function() {
@@ -198,9 +195,9 @@ var excess;
       this.onClose = new events.TypedEvent;
       this.onError = new events.TypedEvent;
       this.onOpen = new events.TypedEvent;
-      this._onMessage = function(message) {
-        excess.log("\nCHANNEL MESSAGE: ", message.data);
-        _this.onMessage.trigger(message);
+      this._onMessage = function(event) {
+        excess.log("\nCHANNEL MESSAGE: ", event.data);
+        _this.onMessage.trigger(event.data);
       };
       this._onError = function(event) {
         excess.log("\nCHANNEL ERROR: ", event);
@@ -263,7 +260,7 @@ var excess;
                 if (!known) {
                   console.error("Received ICE candidate from unknown peer: ", from);
                 } else {
-                  excess.log("Received ICE candidate from", from, data);
+                  excess.debug("Received ICE candidate from", from, data);
                   _this.connections[from].addIceCandidate(data);
                 }
               } else {
@@ -315,9 +312,10 @@ var excess;
       this.caller = false;
       this.remoteDescriptionSet = false;
       this.onClose = new events.TypedEvent;
+      this.onDataChannelReceive = new events.TypedEvent;
       this.onSDPCreate = function(sdp) {
         _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded, function() {
-          return excess.log("Failed to set local description!");
+          return excess.err("Failed to set local description!");
         });
         _this.signaller.signal(_this.id, sdp);
       };
@@ -345,7 +343,8 @@ var excess;
       this.channels = {};
       this.connection = new RTCPeerConnection(rtcConfig);
       this.connection.ondatachannel = function(event) {
-        return _this.addDataChannel(event.channel);
+        _this.addDataChannel(event.channel);
+        _this.onDataChannelReceive.trigger(_this.channels[event.channel.label]);
       };
       this.connection.onnegotiationneeded = function(e) {
         return console.warn("Negotation needed!");
@@ -383,7 +382,6 @@ var excess;
       }
       excess.log("Added data channel ", dc);
       var channelWrapper = new excess.Channel(dc);
-      l = channelWrapper;
       this.channels[dc.label] = channelWrapper;
       this.channels[dc.label].onClose.add(function() {
         return delete _this.channels[dc.label];
@@ -473,7 +471,7 @@ var excess;
     };
     Signaller.prototype.signal = function(toId, payload) {
       var from = this.id;
-      excess.log("Signalling to ", toId, payload);
+      excess.debug("Signalling to ", toId, payload);
       this.signalChannel.send("msg:user", {to:toId, data:payload});
     };
     return Signaller;

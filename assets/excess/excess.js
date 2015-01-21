@@ -65,9 +65,9 @@ var excess;
             this.onError = new events.TypedEvent();
             this.onOpen = new events.TypedEvent();
             /* Callbacks */
-            this._onMessage = function (message) {
-                excess.log("\nCHANNEL MESSAGE: ", message.data);
-                _this.onMessage.trigger(message);
+            this._onMessage = function (event) {
+                excess.log("\nCHANNEL MESSAGE: ", event.data);
+                _this.onMessage.trigger(event.data);
             };
             this._onError = function (event) {
                 excess.log("\nCHANNEL ERROR: ", event);
@@ -184,6 +184,7 @@ var excess;
             this.caller = false;
             this.remoteDescriptionSet = false;
             this.onClose = new events.TypedEvent();
+            this.onDataChannelReceive = new events.TypedEvent();
             //Called when offer or answer is done creating
             //If the offer/answer was not created, onOfferError below is called
             this.onSDPCreate = function (sdp) {
@@ -218,7 +219,10 @@ var excess;
             this.iceBuffer = [];
             this.channels = {};
             this.connection = new RTCPeerConnection(rtcConfig);
-            this.connection.ondatachannel = function (event) { return _this.addDataChannel(event.channel); };
+            this.connection.ondatachannel = function (event) {
+                _this.addDataChannel(event.channel);
+                _this.onDataChannelReceive.trigger(_this.channels[event.channel.label]);
+            };
             this.connection.onnegotiationneeded = function (e) { return console.warn("Negotation needed!"); };
             this.connection.onicecandidate = this.onIceCandidate;
             this.connection.onstatechange = this.onStateChange;

@@ -13,6 +13,7 @@ module excess {
         iceBuffer: RTCIceCandidate[];
 
         public onClose: events.IEvent = new events.TypedEvent();
+        public onDataChannelReceive: ChannelReceiveEvent = new events.TypedEvent();
 
         constructor(id: string, signaller: Signaller, rtcConfig: RTCConfiguration) {
             this.signaller = signaller;
@@ -20,7 +21,10 @@ module excess {
             this.iceBuffer = [];
             this.channels = {};
             this.connection = new RTCPeerConnection(rtcConfig);
-            this.connection.ondatachannel = (event: any) => this.addDataChannel(event.channel);
+            this.connection.ondatachannel = (event: any) => {
+                this.addDataChannel(event.channel);
+                this.onDataChannelReceive.trigger(this.channels[event.channel.label]);
+            }
             this.connection.onnegotiationneeded = (e) => console.warn("Negotation needed!");
             
             this.connection.onicecandidate = this.onIceCandidate;
@@ -149,4 +153,12 @@ module excess {
         }
 
     }
+
+
+    export interface ChannelReceiveEvent extends events.IEvent {
+        add(listener: (channel: Channel) => any): void;
+        remove(listener: (channel: Channel) => any): void;
+        trigger(channel: Channel): void;
+    }
+
 } 
