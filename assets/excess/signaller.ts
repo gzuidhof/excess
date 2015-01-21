@@ -43,7 +43,7 @@ module excess {
 
 
             channel.on("msg:user", (message: ExcessSignalMessage) => {
-                // console.log("Received signalling message: ", message);
+                // excess.log("Received signalling message: ", message);
                 this.onSignal.trigger(message.from, message.data);
             });
         }
@@ -74,7 +74,7 @@ module excess {
         */
         public signal(toId: string, payload: any) {
             var from = this.id;
-            console.log('Signalling to ', toId, payload);
+            excess.log('Signalling to ', toId, payload);
 
             this.signalChannel.send("msg:user", { to: toId, data: payload });
         }

@@ -1,4 +1,4 @@
-﻿/// <reference path="peer.ts" />
+﻿/// <reference path="excess.ts" />
 module excess {
     /**
     * Wraps a WebRTC DataChannel
@@ -32,22 +32,22 @@ module excess {
         /* Callbacks */
 
         private _onMessage = (message: RTCMessageEvent) => {
-            console.log("\nCHANNEL MESSAGE: ", message.data);
+            excess.log("\nCHANNEL MESSAGE: ", message.data);
             this.onMessage.trigger(message);
         }
 
         private _onError = (event: any) => {
-            console.log("\nCHANNEL ERROR: ", event);
+            excess.log("\nCHANNEL ERROR: ", event);
             this.onError.trigger(event);
         } 
 
         private _onClose = (event: any) => {
-            console.log("\nCHANNEL CLOSE: ", event);
+            excess.log("\nCHANNEL CLOSE: ", event);
             this.onClose.trigger(event);
         }
 
         private _onOpen = (event: any) => {
-            console.log("\nCHANNEL OPEN: ", event);
+            excess.log("\nCHANNEL OPEN: ", event);
             this.onOpen.trigger(event);
         }
 

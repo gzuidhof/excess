@@ -52,7 +52,7 @@ module excess {
         //Called when offer or answer is done creating
         //If the offer/answer was not created, onOfferError below is called
         onSDPCreate = (sdp: RTCSessionDescription) => {
-            this.connection.setLocalDescription(sdp, this.onLocalDescrAdded, () => console.log("Failed to set local description!"));
+            this.connection.setLocalDescription(sdp, this.onLocalDescrAdded, () => excess.log("Failed to set local description!"));
             this.signaller.signal(this.id, sdp);
         }
 
@@ -61,7 +61,7 @@ module excess {
         }
 
         createDataChannel(label: string, opts: RTCDataChannelInit = {}): excess.Channel {
-            console.log('Creating data channel ', label, ' opts:', opts);
+            excess.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
             return this.addDataChannel(channel);
         }
@@ -70,7 +70,7 @@ module excess {
             if (typeof dc != 'object') {
                 console.error('Data channel is not even an object!');
             }
-            console.log('Added data channel ', dc);
+            excess.log('Added data channel ', dc);
             var channelWrapper = new Channel(dc);
             l = channelWrapper; //Temporary global var for debug purposes
             this.channels[dc.label] = channelWrapper;
@@ -89,7 +89,7 @@ module excess {
                 this.connection.addIceCandidate(can)
             }
             else {
-                console.log("Buffering ICE candidate");
+                excess.log("Buffering ICE candidate");
                 this.iceBuffer.push(candidate);
             }
         }
@@ -97,13 +97,13 @@ module excess {
 
 
         setRemoteDescription(sdpi: RTCSessionDescriptionInit, callback = () => { }) {
-            console.log("Attempting to set remote description.");
+            excess.log("Attempting to set remote description.");
             var sdp = new RTCSessionDescription(sdpi);
 
             this.connection.setRemoteDescription(sdp, 
                 () => {
                     //Called after remote description is set
-                    console.log("Set remote description", this.caller ? '(ANSWER).' : '(OFFER).');
+                    excess.log("Set remote description", this.caller ? '(ANSWER).' : '(OFFER).');
                     this.remoteDescriptionSet = true;
                     this.addIceBuffer();
                     callback.apply(this);
@@ -114,7 +114,7 @@ module excess {
         }
 
         private onLocalDescrAdded = () => {
-            console.log('Set local description ', this.caller ? '(OFFER).' : '(ANSWER).')
+            excess.log('Set local description ', this.caller ? '(OFFER).' : '(ANSWER).')
         }
 
 
@@ -127,11 +127,11 @@ module excess {
         }
 
         private onStateChange = (event) => {
-            console.log('Connection state change ', event);           
+            excess.log('Connection state change ', event);           
         }
 
         private onIceStateChange = (event) => {
-            console.log('ICE state changed: connection:', this.connection.iceConnectionState, 'gathering:', this.connection.iceGatheringState);
+            excess.log('ICE state changed: connection:', this.connection.iceConnectionState, 'gathering:', this.connection.iceGatheringState);
         }
         
 

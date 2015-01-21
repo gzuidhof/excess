@@ -45,15 +45,143 @@ var events;
 /// <reference path="event/event.ts" />
 /// <reference path="phoenix.d.ts" />
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
+var excess;
+(function (excess) {
+    excess.log = console.log;
+    excess.err = console.error;
+})(excess || (excess = {}));
 var c;
 var l;
-var r;
 window.onload = function () {
     var id = Math.random().toString(36).substr(2, 2);
     console.log('id: ', id);
     c = new excess.ExcessClient("//localhost:4000/excess", id);
     c.joinRoom('__debug');
 };
+/// <reference path="excess.ts" />
+var excess;
+(function (excess) {
+    /**
+    * Wraps a WebRTC DataChannel
+    */
+    var Channel = (function () {
+        function Channel(rtcDataChannel) {
+            var _this = this;
+            this.onMessage = new events.TypedEvent();
+            this.onClose = new events.TypedEvent();
+            this.onError = new events.TypedEvent();
+            this.onOpen = new events.TypedEvent();
+            /* Callbacks */
+            this._onMessage = function (message) {
+                excess.log("\nCHANNEL MESSAGE: ", message.data);
+                _this.onMessage.trigger(message);
+            };
+            this._onError = function (event) {
+                excess.log("\nCHANNEL ERROR: ", event);
+                _this.onError.trigger(event);
+            };
+            this._onClose = function (event) {
+                excess.log("\nCHANNEL CLOSE: ", event);
+                _this.onClose.trigger(event);
+            };
+            this._onOpen = function (event) {
+                excess.log("\nCHANNEL OPEN: ", event);
+                _this.onOpen.trigger(event);
+            };
+            this.dataChannel = rtcDataChannel;
+            this.attachCallbacks();
+        }
+        Channel.prototype.attachCallbacks = function () {
+            this.dataChannel.onmessage = this._onMessage;
+            this.dataChannel.onerror = this._onError;
+            this.dataChannel.onclose = this._onClose;
+            this.dataChannel.onopen = this._onOpen;
+        };
+        Channel.prototype.send = function (message) {
+            this.dataChannel.send(message);
+        };
+        return Channel;
+    })();
+    excess.Channel = Channel;
+})(excess || (excess = {}));
+/// <reference path="excess.ts" />
+var excess;
+(function (excess) {
+    var ExcessClient = (function () {
+        function ExcessClient(signalEndpoint, id, iceServers) {
+            var _this = this;
+            if (iceServers === void 0) { iceServers = [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302" }]; }
+            this.receiveSignalMessage = function (from, data) {
+                //Currently connected or signalling
+                var known = (_this.connections[from]) ? true : false;
+                if (!data) {
+                    console.error("Received empty signalling message, error from server?");
+                }
+                else if (data.type == "offer") {
+                    if (known) {
+                        console.warn("Already have a connection with fromId!");
+                    }
+                    excess.log("Received OFFER from", from, data);
+                    var peer = _this.createPeer(from);
+                    peer.answer(data);
+                }
+                else if (data.type == "answer") {
+                    if (!known) {
+                        console.error("Received answer SDP from unknown peer: ", from);
+                    }
+                    else {
+                        excess.log("Received ANSWER from ", from, data);
+                        _this.connections[from].setRemoteDescription(data);
+                    }
+                }
+                else if (data.candidate) {
+                    if (!known) {
+                        console.error("Received ICE candidate from unknown peer: ", from);
+                    }
+                    else {
+                        excess.log("Received ICE candidate from", from, data);
+                        _this.connections[from].addIceCandidate(data);
+                    }
+                }
+                else {
+                    console.warn("Received unexpected signal message ", data, " from ", from);
+                }
+            };
+            this.id = id;
+            this.connections = {};
+            this.rtcConfig = { "iceServers": iceServers };
+            this.signaller = new excess.Signaller(signalEndpoint, id);
+            //Subscribe to signalling messages from others (someone trying to connect to local peer).
+            this.signaller.onSignal.add(this.receiveSignalMessage);
+        }
+        ExcessClient.prototype.connect = function (id) {
+            if (id == this.id) {
+                console.error('You can\'t connect to yourself!');
+                return null;
+            }
+            var peer = this.createPeer(id);
+            peer.call();
+            return peer;
+        };
+        ExcessClient.prototype.createPeer = function (id) {
+            var _this = this;
+            excess.log('Creating peer for ', id);
+            var peer = new excess.ExcessPeer(id, this.signaller, this.rtcConfig);
+            this.connections[id] = peer;
+            peer.onClose.add(function () {
+                excess.log('Connection to ', id, 'closed, deleting peer');
+                delete _this.connections[id];
+            });
+            return peer;
+        };
+        ExcessClient.prototype.joinRoom = function (room) {
+            this.currentRoom = room;
+            this.signaller.join(room);
+        };
+        return ExcessClient;
+    })();
+    excess.ExcessClient = ExcessClient;
+})(excess || (excess = {}));
 /// <reference path="excess.ts" />
 var excess;
 (function (excess) {
@@ -66,20 +194,20 @@ var excess;
             //Called when offer or answer is done creating
             //If the offer/answer was not created, onOfferError below is called
             this.onSDPCreate = function (sdp) {
-                _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded, function () { return console.log("Failed to set local description!"); });
+                _this.connection.setLocalDescription(sdp, _this.onLocalDescrAdded, function () { return excess.log("Failed to set local description!"); });
                 _this.signaller.signal(_this.id, sdp);
             };
             this.onSDPError = function (event) {
                 console.error(event);
             };
             this.onLocalDescrAdded = function () {
-                console.log('Set local description ', _this.caller ? '(OFFER).' : '(ANSWER).');
+                excess.log('Set local description ', _this.caller ? '(OFFER).' : '(ANSWER).');
             };
             this.onStateChange = function (event) {
-                console.log('Connection state change ', event);
+                excess.log('Connection state change ', event);
             };
             this.onIceStateChange = function (event) {
-                console.log('ICE state changed: connection:', _this.connection.iceConnectionState, 'gathering:', _this.connection.iceGatheringState);
+                excess.log('ICE state changed: connection:', _this.connection.iceConnectionState, 'gathering:', _this.connection.iceGatheringState);
             };
             //Called when ICE candidate is received from STUN server.
             this.onIceCandidate = function (event) {
@@ -120,7 +248,7 @@ var excess;
         };
         ExcessPeer.prototype.createDataChannel = function (label, opts) {
             if (opts === void 0) { opts = {}; }
-            console.log('Creating data channel ', label, ' opts:', opts);
+            excess.log('Creating data channel ', label, ' opts:', opts);
             var channel = this.connection.createDataChannel(label, opts);
             return this.addDataChannel(channel);
         };
@@ -129,7 +257,7 @@ var excess;
             if (typeof dc != 'object') {
                 console.error('Data channel is not even an object!');
             }
-            console.log('Added data channel ', dc);
+            excess.log('Added data channel ', dc);
             var channelWrapper = new excess.Channel(dc);
             l = channelWrapper; //Temporary global var for debug purposes
             this.channels[dc.label] = channelWrapper;
@@ -144,7 +272,7 @@ var excess;
                 this.connection.addIceCandidate(can);
             }
             else {
-                console.log("Buffering ICE candidate");
+                excess.log("Buffering ICE candidate");
                 this.iceBuffer.push(candidate);
             }
         };
@@ -152,11 +280,11 @@ var excess;
             var _this = this;
             if (callback === void 0) { callback = function () {
             }; }
-            console.log("Attempting to set remote description.");
+            excess.log("Attempting to set remote description.");
             var sdp = new RTCSessionDescription(sdpi);
             this.connection.setRemoteDescription(sdp, function () {
                 //Called after remote description is set
-                console.log("Set remote description", _this.caller ? '(ANSWER).' : '(OFFER).');
+                excess.log("Set remote description", _this.caller ? '(ANSWER).' : '(OFFER).');
                 _this.remoteDescriptionSet = true;
                 _this.addIceBuffer();
                 callback.apply(_this);
@@ -173,130 +301,6 @@ var excess;
     })();
     excess.ExcessPeer = ExcessPeer;
 })(excess || (excess = {}));
-/// <reference path="peer.ts" />
-var excess;
-(function (excess) {
-    /**
-    * Wraps a WebRTC DataChannel
-    */
-    var Channel = (function () {
-        function Channel(rtcDataChannel) {
-            var _this = this;
-            this.onMessage = new events.TypedEvent();
-            this.onClose = new events.TypedEvent();
-            this.onError = new events.TypedEvent();
-            this.onOpen = new events.TypedEvent();
-            /* Callbacks */
-            this._onMessage = function (message) {
-                console.log("\nCHANNEL MESSAGE: ", message.data);
-                _this.onMessage.trigger(message);
-            };
-            this._onError = function (event) {
-                console.log("\nCHANNEL ERROR: ", event);
-                _this.onError.trigger(event);
-            };
-            this._onClose = function (event) {
-                console.log("\nCHANNEL CLOSE: ", event);
-                _this.onClose.trigger(event);
-            };
-            this._onOpen = function (event) {
-                console.log("\nCHANNEL OPEN: ", event);
-                _this.onOpen.trigger(event);
-            };
-            this.dataChannel = rtcDataChannel;
-            this.attachCallbacks();
-        }
-        Channel.prototype.attachCallbacks = function () {
-            this.dataChannel.onmessage = this._onMessage;
-            this.dataChannel.onerror = this._onError;
-            this.dataChannel.onclose = this._onClose;
-            this.dataChannel.onopen = this._onOpen;
-        };
-        Channel.prototype.send = function (message) {
-            this.dataChannel.send(message);
-        };
-        return Channel;
-    })();
-    excess.Channel = Channel;
-})(excess || (excess = {}));
-/// <reference path="excess.ts" />
-var excess;
-(function (excess) {
-    var ExcessClient = (function () {
-        function ExcessClient(signalEndpoint, id, iceServers) {
-            var _this = this;
-            if (iceServers === void 0) { iceServers = [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302" }]; }
-            this.receiveSignalMessage = function (from, data) {
-                //Currently connected or signalling
-                var known = (_this.connections[from]) ? true : false;
-                if (!data) {
-                    console.error("Received empty signalling message, error from server?");
-                }
-                else if (data.type == "offer") {
-                    if (known) {
-                        console.warn("Already have a connection with fromId!");
-                    }
-                    console.log("Received OFFER from", from, data);
-                    var peer = _this.createPeer(from);
-                    peer.answer(data);
-                }
-                else if (data.type == "answer") {
-                    if (!known) {
-                        console.error("Received answer SDP from unknown peer: ", from);
-                    }
-                    else {
-                        console.log("Received ANSWER from ", from, data);
-                        _this.connections[from].setRemoteDescription(data);
-                    }
-                }
-                else if (data.candidate) {
-                    if (!known) {
-                        console.error("Received ICE candidate from unknown peer: ", from);
-                    }
-                    else {
-                        console.log("Received ICE candidate from", from, data);
-                        _this.connections[from].addIceCandidate(data);
-                    }
-                }
-                else {
-                    console.warn("Received unexpected signal message ", data, " from ", from);
-                }
-            };
-            this.id = id;
-            this.connections = {};
-            this.rtcConfig = { "iceServers": iceServers };
-            this.signaller = new excess.Signaller(signalEndpoint, id);
-            //Subscribe to signalling messages from others (someone trying to connect to local peer).
-            this.signaller.onSignal.add(this.receiveSignalMessage);
-        }
-        ExcessClient.prototype.connect = function (id) {
-            if (id == this.id) {
-                console.error('You can\'t connect to yourself!');
-                return null;
-            }
-            var peer = this.createPeer(id);
-            peer.call();
-            return peer;
-        };
-        ExcessClient.prototype.createPeer = function (id) {
-            var _this = this;
-            console.log('Creating peer for ', id);
-            var peer = new excess.ExcessPeer(id, this.signaller, this.rtcConfig);
-            this.connections[id] = peer;
-            peer.onClose.add(function () {
-                console.log('Connection to ', id, 'closed, deleting peer');
-                delete _this.connections[id];
-            });
-            return peer;
-        };
-        ExcessClient.prototype.joinRoom = function (room) {
-            this.currentRoom = room;
-            this.signaller.join(room);
-        };
-        return ExcessClient;
-    })();
-    excess.ExcessClient = ExcessClient;
-})(excess || (excess = {}));
 /// <reference path="excess.ts" />
 var excess;
 (function (excess) {
@@ -308,7 +312,7 @@ var excess;
                 _this.signalChannel = channel;
                 _this.currentRoom = channel.topic;
                 channel.on("msg:user", function (message) {
-                    // console.log("Received signalling message: ", message);
+                    // excess.log("Received signalling message: ", message);
                     _this.onSignal.trigger(message.from, message.data);
                 });
             };
@@ -351,7 +355,7 @@ var excess;
         */
         Signaller.prototype.signal = function (toId, payload) {
             var from = this.id;
-            console.log('Signalling to ', toId, payload);
+            excess.log('Signalling to ', toId, payload);
             this.signalChannel.send("msg:user", { to: toId, data: payload });
         };
         return Signaller;
