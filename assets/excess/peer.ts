@@ -72,7 +72,6 @@ module excess {
             }
             excess.log('Added data channel ', dc);
             var channelWrapper = new Channel(dc);
-            l = channelWrapper; //Temporary global var for debug purposes
             this.channels[dc.label] = channelWrapper;
 
             this.channels[dc.label].onClose.add(() => delete this.channels[dc.label]);

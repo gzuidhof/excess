@@ -48,16 +48,9 @@ var events;
 var excess;
 (function (excess) {
     excess.log = console.log;
+    excess.debug = console.debug;
     excess.err = console.error;
 })(excess || (excess = {}));
-var c;
-var l;
-window.onload = function () {
-    var id = Math.random().toString(36).substr(2, 2);
-    console.log('id: ', id);
-    c = new excess.ExcessClient("//localhost:4000/excess", id);
-    c.joinRoom('__debug');
-};
 /// <reference path="excess.ts" />
 var excess;
 (function (excess) {
@@ -259,7 +252,6 @@ var excess;
             }
             excess.log('Added data channel ', dc);
             var channelWrapper = new excess.Channel(dc);
-            l = channelWrapper; //Temporary global var for debug purposes
             this.channels[dc.label] = channelWrapper;
             this.channels[dc.label].onClose.add(function () { return delete _this.channels[dc.label]; });
             return channelWrapper;
