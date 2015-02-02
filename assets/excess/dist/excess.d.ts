@@ -44,7 +44,7 @@ declare module excess {
         */
         onConnection: events.IEvent;
         connections: {
-            [x: string]: ExcessPeer;
+            [id: string]: ExcessPeer;
         };
         id: string;
         currentRoom: string;
@@ -66,7 +66,7 @@ declare module excess {
         connection: RTCPeerConnection;
         caller: boolean;
         channels: {
-            [x: string]: Channel;
+            [id: string]: Channel;
         };
         remoteDescriptionSet: boolean;
         iceBuffer: RTCIceCandidate[];
@@ -75,7 +75,7 @@ declare module excess {
         answer(offerSDP: RTCSessionDescriptionInit): void;
         private onSDPCreate;
         private onSDPError;
-        createDataChannel(label: string, opts?: RTCDataChannelInit): Channel;
+        createDataChannel(label: string, opts?: RTCDataChannelInit): excess.Channel;
         private addDataChannel(dc);
         addIceCandidate(candidate: RTCIceCandidate): void;
         setRemoteDescription(sdpi: RTCSessionDescriptionInit, callback?: () => void): void;

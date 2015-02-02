@@ -25,7 +25,7 @@
 
         protocol: () => string;
         expandEndPoint: (string) => string;
-        close(callback: () => any, code: any, reason: any): any;
+        close(callback?: () => any, code?: any, reason?: any): any;
         reconnect(): any;
         resetBufferTimer(): any;
         log(msg: string): any;
@@ -50,6 +50,14 @@
         flushSendBuffer(): any;
         onConnMessage(rawMessage: string): any[];
 
+        stateChangeCallbacks: StateChangeCallbacks;
+    }
+
+    export interface StateChangeCallbacks {
+        open: (()=>any) [];
+        close: ((event) => any)[];
+        error: ((event) => any)[];
+        message: ((event) => any)[];
     }
 
     export interface SocketOptions {

@@ -2,7 +2,7 @@
 module excess {
 
     export class ExcessClient {
-
+        
         /**
         * Triggered when a new connection is made, requested by a peer.
         */
@@ -16,7 +16,7 @@ module excess {
         signaller: Signaller;
         rtcConfig: RTCConfiguration;
 
-        constructor(signalEndpoint: string, id: string, iceServers: any[]= [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302"}]) {
+        constructor(signalEndpoint: string, id: string, iceServers: any[] = [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302"}]) {
             this.id = id;
             this.connections = {};
             this.rtcConfig = { "iceServers": iceServers };
@@ -24,8 +24,13 @@ module excess {
 
             this.signaller = new Signaller(signalEndpoint, id);
             //Subscribe to signalling messages from others (someone trying to connect to local peer).
-            this.signaller.onSignal.add(this.receiveSignalMessage)
+           // this.signaller.onSignal.add(this.receiveSignalMessage)
         }
+
+        connectToServer(): Thenable<{}> {
+            return this.signaller.connect();
+        }
+
 
         connect(id: string): ExcessPeer {
             if (id == this.id) {
@@ -51,7 +56,7 @@ module excess {
 
             return peer;
         }
-
+        
         receiveSignalMessage = (from: string, data: any) => {
             //Currently connected or signalling
             var known = (this.connections[from]) ? true : false;

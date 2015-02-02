@@ -18,6 +18,7 @@ declare module excess {
     var debug: (message?: string, ...optionalParams: any[]) => void;
     var err: (message?: any, ...optionalParams: any[]) => void;
 }
+declare var c: excess.ExcessClient;
 declare module excess {
     /**
     * Wraps a WebRTC DataChannel
@@ -44,13 +45,14 @@ declare module excess {
         */
         onConnection: events.IEvent;
         connections: {
-            [x: string]: ExcessPeer;
+            [id: string]: ExcessPeer;
         };
         id: string;
         currentRoom: string;
         signaller: Signaller;
         rtcConfig: RTCConfiguration;
         constructor(signalEndpoint: string, id: string, iceServers?: any[]);
+        connectToServer(): Thenable<{}>;
         connect(id: string): ExcessPeer;
         private createPeer(id);
         receiveSignalMessage: (from: string, data: any) => void;
@@ -66,7 +68,7 @@ declare module excess {
         connection: RTCPeerConnection;
         caller: boolean;
         channels: {
-            [x: string]: Channel;
+            [id: string]: Channel;
         };
         remoteDescriptionSet: boolean;
         iceBuffer: RTCIceCandidate[];
@@ -75,7 +77,7 @@ declare module excess {
         answer(offerSDP: RTCSessionDescriptionInit): void;
         private onSDPCreate;
         private onSDPError;
-        createDataChannel(label: string, opts?: RTCDataChannelInit): Channel;
+        createDataChannel(label: string, opts?: RTCDataChannelInit): excess.Channel;
         private addDataChannel(dc);
         addIceCandidate(candidate: RTCIceCandidate): void;
         setRemoteDescription(sdpi: RTCSessionDescriptionInit, callback?: () => void): void;
@@ -96,11 +98,13 @@ declare module excess {
         socket: Phoenix.Socket;
         private signalChannel;
         currentRoom: string;
+        private endPoint;
         onSignal: SignalEvent;
         private discoveryChannel;
         private discoveryCallbacks;
         id: string;
         constructor(endPoint: string, id: string);
+        connect(): Promise<{}>;
         join(room: string): void;
         private addChannel;
         private addDiscoveryChannel(channel);

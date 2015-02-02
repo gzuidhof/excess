@@ -7,9 +7,9 @@ module excess {
 
         private signalChannel: Phoenix.Channel;
         currentRoom: string; //In topic form "room:<room_id>"
+        private endPoint: string;
 
         public onSignal: SignalEvent = new events.TypedEvent();
-
 
         private discoveryChannel: Phoenix.Channel;
         private discoveryCallbacks: { [id: number]: (peers: string[]) => void };
@@ -19,11 +19,42 @@ module excess {
         constructor(endPoint: string, id: string) {
             this.id = id;
             this.discoveryCallbacks = {};
-            this.socket = new Phoenix.Socket(endPoint);
-            this.socket.join("discovery", {}, (channel) => this.addDiscoveryChannel(channel));
+            this.endPoint = endPoint;
         }
 
+        connect(): Promise<{}> {
+            this.socket = new Phoenix.Socket(this.endPoint);
+
+            var fulfilled: boolean = false;
+
+            return new Promise((fulfill, reject) => {
+
+                this.socket.onOpen(() => {
+                    fulfilled = true;
+                    this.socket.join("discovery", {},(channel) => this.addDiscoveryChannel(channel));
+                    fulfill();
+                });
+                this.socket.onError(() => {
+                    if (!fulfilled) { // No method for removing onError callback yet, hack so that we don't
+                                      // disable reconnecting upon later failure of connection.
+
+                        //Stop it from attempting to reconnect at this stage.
+                        this.socket.reconnect = () => { };
+                        this.socket = null;
+                        reject(Error('Failed to connect to signalling server!'));
+                    }
+                });
+            });
+
+
+        }
+
+
         join(room: string) {
+            if (this.socket == null) {
+                excess.err("Connect the signalling server first!");
+            }
+
             var roomtopic = "room:" + room;
 
             // No point in joining the room if it is already the current room.

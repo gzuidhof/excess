@@ -30,6 +30,7 @@
     <TypeScriptCompile Include="peer.ts" />
     <TypeScriptCompile Include="phoenix.d.ts" />
     <TypeScriptCompile Include="signaller.ts" />
+    <TypeScriptCompile Include="typings\es6-promise\es6-promise.d.ts" />
     <TypeScriptCompile Include="typings\webrtc\MediaStream.d.ts" />
     <TypeScriptCompile Include="typings\webrtc\RTCPeerConnection.d.ts" />
   </ItemGroup>
