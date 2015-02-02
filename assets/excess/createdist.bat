@@ -4,3 +4,4 @@ java -jar ../tools/compiler.jar --compilation_level WHITESPACE_ONLY --formatting
 java -jar ../tools/compiler.jar --js adapter.js --js excess.js --js phoenix.js --js_output_file dist/excess.min.js
 
 copy "excess.d.ts" "dist\excess.d.ts"
+pause
