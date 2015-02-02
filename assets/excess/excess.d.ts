@@ -39,6 +39,10 @@ declare module excess {
 }
 declare module excess {
     class ExcessClient {
+        /**
+        * Triggered when a new connection is made, requested by a peer.
+        */
+        onConnection: events.IEvent;
         connections: {
             [x: string]: ExcessPeer;
         };
@@ -48,13 +52,15 @@ declare module excess {
         rtcConfig: RTCConfiguration;
         constructor(signalEndpoint: string, id: string, iceServers?: any[]);
         connect(id: string): ExcessPeer;
-        createPeer(id: string): ExcessPeer;
+        private createPeer(id);
         receiveSignalMessage: (from: string, data: any) => void;
         joinRoom(room: string): void;
     }
 }
 declare module excess {
     class ExcessPeer {
+        onClose: events.IEvent;
+        onDataChannelReceive: ChannelReceiveEvent;
         signaller: Signaller;
         id: string;
         connection: RTCPeerConnection;
@@ -64,13 +70,11 @@ declare module excess {
         };
         remoteDescriptionSet: boolean;
         iceBuffer: RTCIceCandidate[];
-        onClose: events.IEvent;
-        onDataChannelReceive: ChannelReceiveEvent;
         constructor(id: string, signaller: Signaller, rtcConfig: RTCConfiguration);
         call(): void;
         answer(offerSDP: RTCSessionDescriptionInit): void;
-        onSDPCreate: (sdp: RTCSessionDescription) => void;
-        onSDPError: (event: any) => void;
+        private onSDPCreate;
+        private onSDPError;
         createDataChannel(label: string, opts?: RTCDataChannelInit): Channel;
         private addDataChannel(dc);
         addIceCandidate(candidate: RTCIceCandidate): void;

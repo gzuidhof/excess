@@ -104,6 +104,10 @@ var excess;
         function ExcessClient(signalEndpoint, id, iceServers) {
             var _this = this;
             if (iceServers === void 0) { iceServers = [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302" }]; }
+            /**
+            * Triggered when a new connection is made, requested by a peer.
+            */
+            this.onConnection = new events.TypedEvent();
             this.receiveSignalMessage = function (from, data) {
                 //Currently connected or signalling
                 var known = (_this.connections[from]) ? true : false;
@@ -181,10 +185,10 @@ var excess;
     var ExcessPeer = (function () {
         function ExcessPeer(id, signaller, rtcConfig) {
             var _this = this;
-            this.caller = false;
-            this.remoteDescriptionSet = false;
             this.onClose = new events.TypedEvent();
             this.onDataChannelReceive = new events.TypedEvent();
+            this.caller = false;
+            this.remoteDescriptionSet = false;
             //Called when offer or answer is done creating
             //If the offer/answer was not created, onOfferError below is called
             this.onSDPCreate = function (sdp) {

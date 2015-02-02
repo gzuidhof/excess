@@ -26,7 +26,7 @@
     <TypeScriptCompile Include="channel.ts" />
     <TypeScriptCompile Include="client.ts" />
     <TypeScriptCompile Include="excess.ts" />
-    <TypeScriptCompile Include="event\event.ts" />
+    <None Include="event\event.ts" />
     <TypeScriptCompile Include="peer.ts" />
     <TypeScriptCompile Include="phoenix.d.ts" />
     <TypeScriptCompile Include="signaller.ts" />

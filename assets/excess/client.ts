@@ -3,12 +3,17 @@ module excess {
 
     export class ExcessClient {
 
+        /**
+        * Triggered when a new connection is made, requested by a peer.
+        */
+        public onConnection: events.IEvent = new events.TypedEvent();
+
+
         connections: { [id: string]: ExcessPeer };
         id: string;
         currentRoom: string;
 
         signaller: Signaller;
-
         rtcConfig: RTCConfiguration;
 
         constructor(signalEndpoint: string, id: string, iceServers: any[]= [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302"}]) {
@@ -34,7 +39,7 @@ module excess {
             return peer;
         }
 
-        createPeer(id: string): ExcessPeer {
+        private createPeer(id: string): ExcessPeer {
             excess.log('Creating peer for ', id);
             var peer = new ExcessPeer(id, this.signaller, this.rtcConfig);
             this.connections[id] = peer;

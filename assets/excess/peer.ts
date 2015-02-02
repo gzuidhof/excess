@@ -3,6 +3,9 @@ module excess {
 
     export class ExcessPeer {
 
+        public onClose: events.IEvent = new events.TypedEvent();
+        public onDataChannelReceive: ChannelReceiveEvent = new events.TypedEvent();
+
         signaller: Signaller;
         id: string;
         connection: RTCPeerConnection;
@@ -11,9 +14,6 @@ module excess {
 
         remoteDescriptionSet: boolean = false;
         iceBuffer: RTCIceCandidate[];
-
-        public onClose: events.IEvent = new events.TypedEvent();
-        public onDataChannelReceive: ChannelReceiveEvent = new events.TypedEvent();
 
         constructor(id: string, signaller: Signaller, rtcConfig: RTCConfiguration) {
             this.signaller = signaller;
@@ -56,12 +56,12 @@ module excess {
 
         //Called when offer or answer is done creating
         //If the offer/answer was not created, onOfferError below is called
-        onSDPCreate = (sdp: RTCSessionDescription) => {
+        private onSDPCreate = (sdp: RTCSessionDescription) => {
             this.connection.setLocalDescription(sdp, this.onLocalDescrAdded, () => excess.err("Failed to set local description!"));
             this.signaller.signal(this.id, sdp);
         }
 
-        onSDPError = (event) => {
+        private onSDPError = (event) => {
             console.error(event);
         }
 

@@ -53,13 +53,9 @@
     }
 
     export interface SocketOptions {
-        /**
-        * Type: WebSocket or LongPoller, need union types to specify this (TS 1.4).
-        */
-        transport?: any;
+        transport?: WebSocket | LongPoller;
         heartbeatIntervalMs?: number;
         logger?: any;
-       
     }
 
     export class LongPoller {
