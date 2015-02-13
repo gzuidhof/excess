@@ -6,7 +6,7 @@ module excess {
         /**
         * Triggered when a new connection is made, requested by a peer.
         */
-        public onConnection: events.IEvent = new events.TypedEvent();
+        public onConnection: events.I1ArgsEvent<ExcessPeer> = new events.TypedEvent();
 
 
         connections: { [id: string]: ExcessPeer };
@@ -51,6 +51,8 @@ module excess {
             var peer = new ExcessPeer(id, this.signaller, this.rtcConfig);
             this.connections[id] = peer;
 
+
+
             peer.onClose.add(() => {
                 excess.log('Connection to ', id, 'closed, deleting peer');
                 delete this.connections[id];
@@ -74,6 +76,8 @@ module excess {
                 excess.log("Received OFFER from", from, data);
                 var peer = this.createPeer(from);
                 peer.answer(data);
+
+                this.onConnection.trigger(peer);
             }
             else if (data.type == "answer") {
                 if (!known) {

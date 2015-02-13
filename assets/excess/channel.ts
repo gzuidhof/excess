@@ -7,10 +7,10 @@ module excess {
 
         private dataChannel: RTCDataChannel;
 
-        public onMessage: events.IEvent = new events.TypedEvent();
-        public onClose: events.IEvent = new events.TypedEvent();
-        public onError: events.IEvent = new events.TypedEvent();
-        public onOpen: events.IEvent = new events.TypedEvent();
+        public onMessage: events.I1ArgsEvent<any> = new events.TypedEvent();
+        public onClose: events.I1ArgsEvent<any> = new events.TypedEvent();
+        public onError: events.I1ArgsEvent<any> = new events.TypedEvent();
+        public onOpen: events.I1ArgsEvent<any> = new events.TypedEvent();
         
         constructor(rtcDataChannel: RTCDataChannel) {
             this.dataChannel = rtcDataChannel;
