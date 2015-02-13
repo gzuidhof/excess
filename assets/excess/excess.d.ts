@@ -12,6 +12,21 @@ declare module events {
         remove(listener?: () => void): void;
         trigger(...a: any[]): void;
     }
+    interface I1ArgsEvent<T> extends IEvent {
+        add(listener: (message: T) => any): void;
+        remove(listener: (message: T) => any): void;
+        trigger(message: T): void;
+    }
+    interface I2ArgsEvent<T, U> extends IEvent {
+        add(listener: (message1: T, message2: U) => any): void;
+        remove(listener: (message: T, message2: U) => any): void;
+        trigger(message: T, message2: U): void;
+    }
+    interface I3ArgsEvent<T, U, V> extends IEvent {
+        add(listener: (message1: T, message2: U, message3: V) => any): void;
+        remove(listener: (message: T, message2: U, message3: V) => any): void;
+        trigger(message: T, message2: U, message3: V): void;
+    }
 }
 declare module excess {
     var log: (message?: any, ...optionalParams: any[]) => void;
