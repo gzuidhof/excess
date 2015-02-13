@@ -13,8 +13,8 @@ module excess {
         id: string;
         currentRoom: string;
 
-        signaller: Signaller;
-        rtcConfig: RTCConfiguration;
+        private signaller: Signaller;
+        private rtcConfig: RTCConfiguration;
 
         constructor(signalEndpoint: string, id: string, iceServers: any[] = [{ "url": "stun:stun.l.google.com:19302" }, { "url": "stun:stun2.l.google.com:19302"}]) {
             this.id = id;
@@ -24,15 +24,17 @@ module excess {
 
             this.signaller = new Signaller(signalEndpoint, id);
             //Subscribe to signalling messages from others (someone trying to connect to local peer).
-           // this.signaller.onSignal.add(this.receiveSignalMessage)
+            this.signaller.onSignal.add(this.receiveSignalMessage)
         }
 
-        connectToServer(): Thenable<{}> {
+        public connectToServer(): Thenable<{}> {
             return this.signaller.connect();
         }
 
-
-        connect(id: string): ExcessPeer {
+        /**
+        * Connect to peer by ID
+        */
+        public connect(id: string): ExcessPeer {
             if (id == this.id) {
                 console.error('You can\'t connect to yourself!');
                 return null;
@@ -57,7 +59,7 @@ module excess {
             return peer;
         }
         
-        receiveSignalMessage = (from: string, data: any) => {
+        private receiveSignalMessage = (from: string, data: any) => {
             //Currently connected or signalling
             var known = (this.connections[from]) ? true : false;
 
@@ -96,7 +98,9 @@ module excess {
             }
         }
 
-
+        /**
+        * Join or switch to given room
+        */
         joinRoom(room: string) {
             this.currentRoom = room;
             this.signaller.join(room);

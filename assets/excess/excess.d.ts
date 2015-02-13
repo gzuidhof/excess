@@ -49,13 +49,19 @@ declare module excess {
         };
         id: string;
         currentRoom: string;
-        signaller: Signaller;
-        rtcConfig: RTCConfiguration;
+        private signaller;
+        private rtcConfig;
         constructor(signalEndpoint: string, id: string, iceServers?: any[]);
         connectToServer(): Thenable<{}>;
+        /**
+        * Connect to peer by ID
+        */
         connect(id: string): ExcessPeer;
         private createPeer(id);
-        receiveSignalMessage: (from: string, data: any) => void;
+        private receiveSignalMessage;
+        /**
+        * Join or switch to given room
+        */
         joinRoom(room: string): void;
     }
 }

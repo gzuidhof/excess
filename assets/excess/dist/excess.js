@@ -186,6 +186,9 @@ var excess;
   excess.debug = console.debug;
   excess.err = console.error;
 })(excess || (excess = {}));
+var c;
+window.onload = function() {
+};
 var excess;
 (function(excess) {
   var Channel = function() {
@@ -277,6 +280,9 @@ var excess;
       this.signaller = new excess.Signaller(signalEndpoint, id);
       this.signaller.onSignal.add(this.receiveSignalMessage);
     }
+    ExcessClient.prototype.connectToServer = function() {
+      return this.signaller.connect();
+    };
     ExcessClient.prototype.connect = function(id) {
       if (id == this.id) {
         console.error("You can't connect to yourself!");
@@ -444,13 +450,35 @@ var excess;
       };
       this.id = id;
       this.discoveryCallbacks = {};
-      this.socket = new Phoenix.Socket(endPoint);
-      this.socket.join("discovery", {}, function(channel) {
-        return _this.addDiscoveryChannel(channel);
-      });
+      this.endPoint = endPoint;
     }
+    Signaller.prototype.connect = function() {
+      var _this = this;
+      this.socket = new Phoenix.Socket(this.endPoint);
+      var fulfilled = false;
+      return new Promise(function(fulfill, reject) {
+        _this.socket.onOpen(function() {
+          fulfilled = true;
+          _this.socket.join("discovery", {}, function(channel) {
+            return _this.addDiscoveryChannel(channel);
+          });
+          fulfill();
+        });
+        _this.socket.onError(function() {
+          if (!fulfilled) {
+            _this.socket.reconnect = function() {
+            };
+            _this.socket = null;
+            reject(Error("Failed to connect to signalling server!"));
+          }
+        });
+      });
+    };
     Signaller.prototype.join = function(room) {
       var _this = this;
+      if (this.socket == null) {
+        excess.err("Connect the signalling server first!");
+      }
       var roomtopic = "room:" + room;
       if (roomtopic != this.currentRoom) {
         if (this.currentRoom) {

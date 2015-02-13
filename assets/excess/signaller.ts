@@ -34,6 +34,7 @@ module excess {
                     this.socket.join("discovery", {},(channel) => this.addDiscoveryChannel(channel));
                     fulfill();
                 });
+
                 this.socket.onError(() => {
                     if (!fulfilled) { // No method for removing onError callback yet, hack so that we don't
                                       // disable reconnecting upon later failure of connection.

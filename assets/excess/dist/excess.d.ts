@@ -1,23 +1,11 @@
 /// <reference path="phoenix.d.ts" />
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
-declare module events {
-    interface IEvent {
-        add(listener: () => void): void;
-        remove(listener: () => void): void;
-        trigger(...a: any[]): void;
-    }
-    class TypedEvent implements IEvent {
-        private _listeners;
-        add(listener: () => void): void;
-        remove(listener?: () => void): void;
-        trigger(...a: any[]): void;
-    }
-}
 declare module excess {
     var log: (message?: any, ...optionalParams: any[]) => void;
     var debug: (message?: string, ...optionalParams: any[]) => void;
     var err: (message?: any, ...optionalParams: any[]) => void;
 }
+declare var c: excess.ExcessClient;
 declare module excess {
     /**
     * Wraps a WebRTC DataChannel
@@ -48,12 +36,19 @@ declare module excess {
         };
         id: string;
         currentRoom: string;
-        signaller: Signaller;
-        rtcConfig: RTCConfiguration;
+        private signaller;
+        private rtcConfig;
         constructor(signalEndpoint: string, id: string, iceServers?: any[]);
+        connectToServer(): Thenable<{}>;
+        /**
+        * Connect to peer by ID
+        */
         connect(id: string): ExcessPeer;
         private createPeer(id);
-        receiveSignalMessage: (from: string, data: any) => void;
+        private receiveSignalMessage;
+        /**
+        * Join or switch to given room
+        */
         joinRoom(room: string): void;
     }
 }
@@ -96,11 +91,13 @@ declare module excess {
         socket: Phoenix.Socket;
         private signalChannel;
         currentRoom: string;
+        private endPoint;
         onSignal: SignalEvent;
         private discoveryChannel;
         private discoveryCallbacks;
         id: string;
         constructor(endPoint: string, id: string);
+        connect(): Promise<{}>;
         join(room: string): void;
         private addChannel;
         private addDiscoveryChannel(channel);

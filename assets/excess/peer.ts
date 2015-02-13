@@ -32,17 +32,16 @@ module excess {
             this.connection.onstatechange = this.onStateChange;
             this.connection.oniceconnectionstatechange = this.onIceStateChange;
 
-            
         }
 
         //Call someone
-        call() {
+        public call() {
             this.createDataChannel('excess');
             this.caller = true;
             this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         }
 
-        answer(offerSDP: RTCSessionDescriptionInit) {
+        public answer(offerSDP: RTCSessionDescriptionInit) {
             if (this.caller) {
                 this.caller = false;
             }
@@ -85,7 +84,7 @@ module excess {
             return channelWrapper;
         }
 
-        addIceCandidate(candidate: RTCIceCandidate) {
+        public addIceCandidate(candidate: RTCIceCandidate) {
             //Can only add ICE candidates after remote description has been set
             //So we buffer 'em in case it's not set yet.
             if (this.remoteDescriptionSet) {
@@ -100,7 +99,7 @@ module excess {
 
 
 
-        setRemoteDescription(sdpi: RTCSessionDescriptionInit, callback = () => { }) {
+        public setRemoteDescription(sdpi: RTCSessionDescriptionInit, callback = () => { }) {
             excess.log("Attempting to set remote description.");
             var sdp = new RTCSessionDescription(sdpi);
 

@@ -53,14 +53,17 @@ var excess;
 })(excess || (excess = {}));
 var c;
 window.onload = function () {
-    var id = Math.random().toString(36).substr(2, 2);
-    console.log('id: ', id);
-    c = new excess.ExcessClient("//localhost:4000/excess", id);
-    c.connectToServer().then(function () {
-        console.log("Connected to server!");
-    }, function (err) {
-        console.error(err);
-    });
+    // var id = Math.random().toString(36).substr(2, 2);
+    // console.log('id: ', id);
+    // c = new excess.ExcessClient("//localhost:4000/excess", id);
+    // c.connectToServer().then(
+    //     () => {
+    //        console.log("Connected to server!");
+    //    },
+    //    (err) => {
+    //         console.error(err);
+    //    }
+    //);
     //c.joinRoom('__debug');
 };
 /// <reference path="excess.ts" />
@@ -161,11 +164,14 @@ var excess;
             this.rtcConfig = { "iceServers": iceServers };
             this.signaller = new excess.Signaller(signalEndpoint, id);
             //Subscribe to signalling messages from others (someone trying to connect to local peer).
-            // this.signaller.onSignal.add(this.receiveSignalMessage)
+            this.signaller.onSignal.add(this.receiveSignalMessage);
         }
         ExcessClient.prototype.connectToServer = function () {
             return this.signaller.connect();
         };
+        /**
+        * Connect to peer by ID
+        */
         ExcessClient.prototype.connect = function (id) {
             if (id == this.id) {
                 console.error('You can\'t connect to yourself!');
@@ -186,6 +192,9 @@ var excess;
             });
             return peer;
         };
+        /**
+        * Join or switch to given room
+        */
         ExcessClient.prototype.joinRoom = function (room) {
             this.currentRoom = room;
             this.signaller.join(room);
