@@ -95,7 +95,7 @@ module excess {
         }
 
 
-        private discover(room: string, callback: (peers: string[]) => void) {
+        public discover(room: string, callback: (peers: string[]) => void) {
             var uid = new Date().getTime();
             this.discoveryCallbacks[uid] = callback;
             this.discoveryChannel.send("get:room", { id: room, r: uid });

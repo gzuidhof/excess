@@ -109,5 +109,10 @@ module excess {
             this.currentRoom = room;
             this.signaller.join(room);
         }
+
+        requestRoom(room: string, callback: (peers: string[]) => any) {
+            this.signaller.discover(room, callback);
+        }
+
     }
 }

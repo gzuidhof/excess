@@ -1,5 +1,33 @@
 /// <reference path="phoenix.d.ts" />
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
+declare module events {
+    interface IEvent {
+        add(listener: () => void): void;
+        remove(listener: () => void): void;
+        trigger(...a: any[]): void;
+    }
+    class TypedEvent implements IEvent {
+        private _listeners;
+        add(listener: () => void): void;
+        remove(listener?: () => void): void;
+        trigger(...a: any[]): void;
+    }
+    interface I1ArgsEvent<T> extends IEvent {
+        add(listener: (message: T) => any): void;
+        remove(listener: (message: T) => any): void;
+        trigger(message: T): void;
+    }
+    interface I2ArgsEvent<T, U> extends IEvent {
+        add(listener: (message1: T, message2: U) => any): void;
+        remove(listener: (message: T, message2: U) => any): void;
+        trigger(message: T, message2: U): void;
+    }
+    interface I3ArgsEvent<T, U, V> extends IEvent {
+        add(listener: (message1: T, message2: U, message3: V) => any): void;
+        remove(listener: (message: T, message2: U, message3: V) => any): void;
+        trigger(message: T, message2: U, message3: V): void;
+    }
+}
 declare module excess {
     var log: (message?: any, ...optionalParams: any[]) => void;
     var debug: (message?: string, ...optionalParams: any[]) => void;
@@ -12,10 +40,10 @@ declare module excess {
     */
     class Channel {
         private dataChannel;
-        onMessage: events.IEvent;
-        onClose: events.IEvent;
-        onError: events.IEvent;
-        onOpen: events.IEvent;
+        onMessage: events.I1ArgsEvent<any>;
+        onClose: events.I1ArgsEvent<any>;
+        onError: events.I1ArgsEvent<any>;
+        onOpen: events.I1ArgsEvent<any>;
         constructor(rtcDataChannel: RTCDataChannel);
         attachCallbacks(): void;
         send(message: any): void;
@@ -30,7 +58,7 @@ declare module excess {
         /**
         * Triggered when a new connection is made, requested by a peer.
         */
-        onConnection: events.IEvent;
+        onConnection: events.I1ArgsEvent<ExcessPeer>;
         connections: {
             [id: string]: ExcessPeer;
         };
