@@ -78,6 +78,7 @@ declare module excess {
         * Join or switch to given room
         */
         joinRoom(room: string): void;
+        requestRoom(room: string, callback: (peers: string[]) => any): void;
     }
 }
 declare module excess {
@@ -133,7 +134,7 @@ declare module excess {
         * Receive answer from server (about who is in some room).
         */
         private receiveDiscovery;
-        private discover(room, callback);
+        discover(room: string, callback: (peers: string[]) => void): void;
         /**
         * Send message to peer, via signalling server
         */
