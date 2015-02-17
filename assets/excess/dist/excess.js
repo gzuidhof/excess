@@ -464,9 +464,9 @@ var excess;
         _this.socket.onOpen(function() {
           fulfilled = true;
           _this.socket.join("discovery", {}, function(channel) {
-            return _this.addDiscoveryChannel(channel);
+            _this.addDiscoveryChannel(channel);
+            fulfill();
           });
-          fulfill();
         });
         _this.socket.onError(function() {
           if (!fulfilled) {

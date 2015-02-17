@@ -31,8 +31,13 @@ module excess {
 
                 this.socket.onOpen(() => {
                     fulfilled = true;
-                    this.socket.join("discovery", {},(channel) => this.addDiscoveryChannel(channel));
-                    fulfill();
+
+                    this.socket.join("discovery", {},(channel) =>
+                    {
+                        this.addDiscoveryChannel(channel)
+                        fulfill();
+                    });
+                    
                 });
 
                 this.socket.onError(() => {

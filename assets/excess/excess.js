@@ -363,8 +363,10 @@ var excess;
             return new Promise(function (fulfill, reject) {
                 _this.socket.onOpen(function () {
                     fulfilled = true;
-                    _this.socket.join("discovery", {}, function (channel) { return _this.addDiscoveryChannel(channel); });
-                    fulfill();
+                    _this.socket.join("discovery", {}, function (channel) {
+                        _this.addDiscoveryChannel(channel);
+                        fulfill();
+                    });
                 });
                 _this.socket.onError(function () {
                     if (!fulfilled) {
