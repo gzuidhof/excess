@@ -2,9 +2,9 @@
 /// <reference path="phoenix.d.ts" />
 /// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
 module excess {
-    export var log   = console.log;
-    export var debug = console.debug
-    export var err   = console.error;
+    export var log   = (...msg) => console.log.apply(console, msg);
+    export var debug = (...msg) => console.debug.apply(console, msg);
+    export var err = (...msg) => console.error.apply(console, msg);
 }
 
 var c: excess.ExcessClient;

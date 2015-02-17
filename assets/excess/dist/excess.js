@@ -182,9 +182,27 @@ function requestUserMedia(constraints) {
 })(events || (events = {}));
 var excess;
 (function(excess) {
-  excess.log = console.log;
-  excess.debug = console.debug;
-  excess.err = console.error;
+  excess.log = function() {
+    var msg = [];
+    for (var _i = 0;_i < arguments.length;_i++) {
+      msg[_i - 0] = arguments[_i];
+    }
+    return console.log.apply(console, msg);
+  };
+  excess.debug = function() {
+    var msg = [];
+    for (var _i = 0;_i < arguments.length;_i++) {
+      msg[_i - 0] = arguments[_i];
+    }
+    return console.debug.apply(console, msg);
+  };
+  excess.err = function() {
+    var msg = [];
+    for (var _i = 0;_i < arguments.length;_i++) {
+      msg[_i - 0] = arguments[_i];
+    }
+    return console.error.apply(console, msg);
+  };
 })(excess || (excess = {}));
 var c;
 window.onload = function() {

@@ -29,9 +29,9 @@ declare module events {
     }
 }
 declare module excess {
-    var log: (message?: any, ...optionalParams: any[]) => void;
-    var debug: (message?: string, ...optionalParams: any[]) => void;
-    var err: (message?: any, ...optionalParams: any[]) => void;
+    var log: (...msg: any[]) => any;
+    var debug: (...msg: any[]) => any;
+    var err: (...msg: any[]) => any;
 }
 declare var c: excess.ExcessClient;
 declare module excess {
