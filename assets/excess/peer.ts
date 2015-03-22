@@ -34,9 +34,11 @@ module excess {
 
         //Call someone
         public call() {
-            this.createDataChannel('excess');
+            var channel = this.createDataChannel('excess');
+            channel.onClose.add(() => { this.onClose.trigger() });
             this.caller = true;
             this.connection.createOffer(this.onSDPCreate, this.onSDPError);
+           
         }
 
         public answer(offerSDP: RTCSessionDescriptionInit) {
