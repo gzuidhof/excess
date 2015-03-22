@@ -217,7 +217,7 @@ var excess;
       this.onError = new events.TypedEvent;
       this.onOpen = new events.TypedEvent;
       this._onMessage = function(event) {
-        _this.onMessage.trigger(event.data);
+        _this.onMessage.trigger(JSON.parse(event.data));
       };
       this._onError = function(event) {
         excess.log("\nCHANNEL ERROR: ", event);
@@ -244,7 +244,7 @@ var excess;
       this.dataChannel.onopen = this._onOpen;
     };
     Channel.prototype.send = function(message) {
-      this.dataChannel.send(message);
+      this.dataChannel.send(JSON.stringify(message));
     };
     return Channel;
   }();

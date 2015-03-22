@@ -99,7 +99,7 @@ var excess;
             this.onOpen = new events.TypedEvent();
             /* Callbacks */
             this._onMessage = function (event) {
-                _this.onMessage.trigger(event.data);
+                _this.onMessage.trigger(JSON.parse(event.data));
             };
             this._onError = function (event) {
                 excess.log("\nCHANNEL ERROR: ", event);
@@ -130,7 +130,8 @@ var excess;
             this.dataChannel.onopen = this._onOpen;
         };
         Channel.prototype.send = function (message) {
-            this.dataChannel.send(message);
+            var msg = JSON.stringify(message);
+            this.dataChannel.send(msg);
         };
         return Channel;
     })();
@@ -257,7 +258,7 @@ var excess;
                 excess.log('Connection state change ', event);
             };
             this.onIceStateChange = function (event) {
-                excess.log('ICE state changed: connection:', _this.connection.iceConnectionState, 'gathering:', _this.connection.iceGatheringState);
+                // excess.log('ICE state changed: connection:', this.connection.iceConnectionState, 'gathering:', this.connection.iceGatheringState);
             };
             //Called when ICE candidate is received from STUN server.
             this.onIceCandidate = function (event) {
@@ -279,7 +280,6 @@ var excess;
                 _this.addDataChannel(event.channel);
                 _this.onDataChannelReceive.trigger(_this.channels[event.channel.label]);
             };
-            this.connection.onnegotiationneeded = function (e) { return console.warn("Negotation needed!"); };
             this.connection.onicecandidate = this.onIceCandidate;
             this.connection.onstatechange = this.onStateChange;
             this.connection.oniceconnectionstatechange = this.onIceStateChange;

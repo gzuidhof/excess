@@ -20,18 +20,16 @@ module excess {
             this.id = id;
             this.iceBuffer = [];
             this.channels = {};
+
             this.connection = new RTCPeerConnection(rtcConfig);
             this.connection.ondatachannel = (event: any) => {
                 this.addDataChannel(event.channel);
                 this.onDataChannelReceive.trigger(this.channels[event.channel.label]);
 
             }
-            this.connection.onnegotiationneeded = (e) => console.warn("Negotation needed!");
-            
             this.connection.onicecandidate = this.onIceCandidate;
             this.connection.onstatechange = this.onStateChange;
             this.connection.oniceconnectionstatechange = this.onIceStateChange;
-
         }
 
         //Call someone
@@ -134,7 +132,7 @@ module excess {
         }
 
         private onIceStateChange = (event) => {
-            excess.log('ICE state changed: connection:', this.connection.iceConnectionState, 'gathering:', this.connection.iceGatheringState);
+           // excess.log('ICE state changed: connection:', this.connection.iceConnectionState, 'gathering:', this.connection.iceGatheringState);
         }
         
 
