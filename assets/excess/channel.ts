@@ -36,14 +36,13 @@ module excess {
 
 
         public send(message: any) {
-            var msg = JSON.stringify(message)
-            this.dataChannel.send(msg);
+            this.dataChannel.send(message);
         }
 
         /* Callbacks */
 
         private _onMessage = (event: RTCMessageEvent) => {
-            this.onMessage.trigger(JSON.parse(event.data));
+            this.onMessage.trigger(event.data;
         }
 
         private _onError = (event: any) => {
