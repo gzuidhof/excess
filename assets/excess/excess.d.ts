@@ -44,6 +44,7 @@ declare module excess {
         onClose: events.I1ArgsEvent<any>;
         onError: events.I1ArgsEvent<any>;
         onOpen: events.I1ArgsEvent<any>;
+        label: string;
         constructor(rtcDataChannel: RTCDataChannel);
         attachCallbacks(): void;
         send(message: any): void;

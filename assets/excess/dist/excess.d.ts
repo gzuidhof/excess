@@ -1,33 +1,3 @@
-/// <reference path="phoenix.d.ts" />
-/// <reference path="typings/webrtc/rtcpeerconnection.d.ts" />
-declare module events {
-    interface IEvent {
-        add(listener: () => void): void;
-        remove(listener: () => void): void;
-        trigger(...a: any[]): void;
-    }
-    class TypedEvent implements IEvent {
-        private _listeners;
-        add(listener: () => void): void;
-        remove(listener?: () => void): void;
-        trigger(...a: any[]): void;
-    }
-    interface I1ArgsEvent<T> extends IEvent {
-        add(listener: (message: T) => any): void;
-        remove(listener: (message: T) => any): void;
-        trigger(message: T): void;
-    }
-    interface I2ArgsEvent<T, U> extends IEvent {
-        add(listener: (message1: T, message2: U) => any): void;
-        remove(listener: (message: T, message2: U) => any): void;
-        trigger(message: T, message2: U): void;
-    }
-    interface I3ArgsEvent<T, U, V> extends IEvent {
-        add(listener: (message1: T, message2: U, message3: V) => any): void;
-        remove(listener: (message: T, message2: U, message3: V) => any): void;
-        trigger(message: T, message2: U, message3: V): void;
-    }
-}
 declare module excess {
     var log: (...msg: any[]) => any;
     var debug: (...msg: any[]) => any;
@@ -44,6 +14,7 @@ declare module excess {
         onClose: events.I1ArgsEvent<any>;
         onError: events.I1ArgsEvent<any>;
         onOpen: events.I1ArgsEvent<any>;
+        label: string;
         constructor(rtcDataChannel: RTCDataChannel);
         attachCallbacks(): void;
         send(message: any): void;

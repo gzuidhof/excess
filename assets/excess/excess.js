@@ -117,6 +117,13 @@ var excess;
             this.dataChannel = rtcDataChannel;
             this.attachCallbacks();
         }
+        Object.defineProperty(Channel.prototype, "label", {
+            get: function () {
+                return this.dataChannel.label;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Channel.prototype.attachCallbacks = function () {
             this.dataChannel.onmessage = this._onMessage;
             this.dataChannel.onerror = this._onError;

@@ -12,6 +12,16 @@ module excess {
         public onError: events.I1ArgsEvent<any> = new events.TypedEvent();
         public onOpen: events.I1ArgsEvent<any> = new events.TypedEvent();
         
+
+
+        get label() {
+            return this.dataChannel.label;
+        }
+
+
+
+
+
         constructor(rtcDataChannel: RTCDataChannel) {
             this.dataChannel = rtcDataChannel;
             this.attachCallbacks();
