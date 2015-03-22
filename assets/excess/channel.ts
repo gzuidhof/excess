@@ -42,7 +42,6 @@ module excess {
         /* Callbacks */
 
         private _onMessage = (event: RTCMessageEvent) => {
-            excess.log("\nCHANNEL MESSAGE: ", event.data);
             this.onMessage.trigger(event.data);
         }
 

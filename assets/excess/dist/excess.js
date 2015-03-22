@@ -217,7 +217,6 @@ var excess;
       this.onError = new events.TypedEvent;
       this.onOpen = new events.TypedEvent;
       this._onMessage = function(event) {
-        excess.log("\nCHANNEL MESSAGE: ", event.data);
         _this.onMessage.trigger(event.data);
       };
       this._onError = function(event) {

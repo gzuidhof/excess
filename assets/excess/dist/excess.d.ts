@@ -88,7 +88,8 @@ declare module excess {
 }
 declare module excess {
     class Signaller {
-        socket: Phoenix.Socket;
+        //socket: Phoenix.Socket;
+		socket: any;
         private signalChannel;
         currentRoom: string;
         private endPoint;
