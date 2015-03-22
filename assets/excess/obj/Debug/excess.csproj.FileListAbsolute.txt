@@ -1,0 +1,6 @@
+C:\Users\Guido\Documents\GitHub\excess\assets\excess\bin\excess.dll.config
+C:\Users\Guido\Documents\GitHub\excess\assets\excess\bin\excess.dll
+C:\Users\Guido\Documents\GitHub\excess\assets\excess\bin\excess.pdb
+C:\Users\Guido\Documents\GitHub\excess\assets\excess\obj\Debug\excess.dll
+C:\Users\Guido\Documents\GitHub\excess\assets\excess\obj\Debug\excess.pdb
+C:\Users\Guido\Documents\GitHub\excess\assets\excess\obj\Debug\excess.csprojResolveAssemblyReference.cache
