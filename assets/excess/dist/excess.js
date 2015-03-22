@@ -244,7 +244,8 @@ var excess;
       this.dataChannel.onopen = this._onOpen;
     };
     Channel.prototype.send = function(message) {
-      this.dataChannel.send(JSON.stringify(message));
+      var msg = JSON.stringify(message);
+      this.dataChannel.send(msg);
     };
     return Channel;
   }();
@@ -360,7 +361,6 @@ var excess;
         excess.log("Connection state change ", event);
       };
       this.onIceStateChange = function(event) {
-        excess.log("ICE state changed: connection:", _this.connection.iceConnectionState, "gathering:", _this.connection.iceGatheringState);
       };
       this.onIceCandidate = function(event) {
         if (event.candidate) {
@@ -377,15 +377,16 @@ var excess;
         _this.addDataChannel(event.channel);
         _this.onDataChannelReceive.trigger(_this.channels[event.channel.label]);
       };
-      this.connection.onnegotiationneeded = function(e) {
-        return console.warn("Negotation needed!");
-      };
       this.connection.onicecandidate = this.onIceCandidate;
       this.connection.onstatechange = this.onStateChange;
       this.connection.oniceconnectionstatechange = this.onIceStateChange;
     }
     ExcessPeer.prototype.call = function() {
-      this.createDataChannel("excess");
+      var _this = this;
+      var channel = this.createDataChannel("excess");
+      channel.onClose.add(function() {
+        _this.onClose.trigger();
+      });
       this.caller = true;
       this.connection.createOffer(this.onSDPCreate, this.onSDPError);
     };

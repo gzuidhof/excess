@@ -286,7 +286,11 @@ var excess;
         }
         //Call someone
         ExcessPeer.prototype.call = function () {
-            this.createDataChannel('excess');
+            var _this = this;
+            var channel = this.createDataChannel('excess');
+            channel.onClose.add(function () {
+                _this.onClose.trigger();
+            });
             this.caller = true;
             this.connection.createOffer(this.onSDPCreate, this.onSDPError);
         };
