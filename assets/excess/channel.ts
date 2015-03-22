@@ -42,7 +42,7 @@ module excess {
         /* Callbacks */
 
         private _onMessage = (event: RTCMessageEvent) => {
-            this.onMessage.trigger(event.data;
+            this.onMessage.trigger(event.data);
         }
 
         private _onError = (event: any) => {
