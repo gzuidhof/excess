@@ -8,5 +8,6 @@ A client can then send messages to a client by id, for webRTC signalling (or any
 Communication between server and client happens over websocket.
 
 --
+Basic signalling has been implemented, it is however still a work in progress. 
 
-This is however, still a work in progress and a learning experience.
+If you plan on adapting this, it was created using the old Channel API of the Phoenix framework (pre 1.0) and will need some updating.
